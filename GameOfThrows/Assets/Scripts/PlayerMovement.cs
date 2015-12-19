@@ -25,6 +25,7 @@ namespace Assets.Scripts
 
         private const float DECAY_FACTOR = 0.85f;
         private const float SPEED_FACTOR = 850f;
+        private const float BASE_ANIM_SPEED = 0.7f;
 
         #endregion
 
@@ -99,8 +100,7 @@ namespace Assets.Scripts
                 velocity.y += Mathf.Sign(vertical) * speed / SPEED_FACTOR;
             if (horizontal != 0)
                 velocity.x += Mathf.Sign(horizontal) * speed / SPEED_FACTOR;
-            animator.SetFloat("HorizontalVelocity", velocity.x / 2);
-            animator.SetFloat("VerticalVelocity", velocity.y / 2);
+            animator.speed = BASE_ANIM_SPEED * (Mathf.Max(Mathf.Abs(velocity.x), Mathf.Abs(velocity.y)) * 0.5f);
         }
 
         private void ApplySpeedDecay()
