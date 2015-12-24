@@ -1,9 +1,9 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System;
 using UnityEngine;
 
 namespace Assets.Scripts
 {
-    public static class GotExtentions
+    internal static class GotExtentions
     {
         /// <summary>
         /// Returns the Max of the x and y values of a UnityEngine.Vector2
@@ -30,6 +30,16 @@ namespace Assets.Scripts
                 vector.y = 0;
 
             return vector;
+        }
+
+        public static float GetDimensionByDirection(this Vector2 vector, Directions direction)
+        {
+            if (direction == Directions.Back || direction == Directions.Front)
+                return vector.y;
+            if (direction == Directions.Left || direction == Directions.Right)
+                return vector.x;
+
+            throw new ArgumentException("Can't get a direction for Directions.Idle");
         }
     }
 }

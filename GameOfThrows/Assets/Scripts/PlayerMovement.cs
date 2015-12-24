@@ -67,8 +67,10 @@ namespace Assets.Scripts
         #region Private Members
 
         private Rigidbody2D rb2D;
-        private Vector2 velocity;
         private Animator animator;
+        private Vector2 velocity;
+        private Vector2 input;
+        private Directions direction;
 
         #endregion
 
@@ -78,30 +80,37 @@ namespace Assets.Scripts
         {
             animator = GetComponent<Animator>();
             rb2D = GetComponent<Rigidbody2D>();
+            input = Vector2.zero;
         }
 
         private void FixedUpdate()
         {
-            float vertical = Input.GetAxisRaw("Vertical");
-            float horizontal = Input.GetAxisRaw("Horizontal");
-            UpdateVelocity(horizontal, vertical);
-            UpdateAnimation(horizontal, vertical);
+            UpdateInput();
+            UpdateVelocity();
+            UpdateAnimation();
             UpdateMovement();
+        }
+
+        #endregion
+
+        #region Input Methods
+
+        private void UpdateInput()
+        {
+            UpdateInput(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
+        }
+
+        private void UpdateInput(float horizontal, float vertical)
+        {
+            input.Set(horizontal, vertical);
         }
 
         #endregion
 
         #region Animation Methods
 
-        private void UpdateAnimation(float horizontal, float vertical)
+        private void UpdateAnimation()
         {
-            UpdateAnimation(new Vector2(horizontal, vertical));
-        }
-
-        private void UpdateAnimation(Vector2 input)
-        {
-            Directions direction;
-
             if (input.y > 0)
                 direction = Directions.Back;
             else if (input.y < 0)
@@ -123,6 +132,28 @@ namespace Assets.Scripts
 
         #endregion
 
+        #region DEBUG
+
+        private string GetDebugPrintDetails()
+        {
+            return string.Format("HOR : {0}\nVER : {1}\nDIR : {2}:{3}\nX : {4}\nY : {5}",
+                velocity.x,
+                velocity.y,
+                ((int)direction).ToString().PadLeft(2),
+                direction,
+                rb2D.position.x,
+                rb2D.position.y);
+        }
+
+        private void KinematicsDebugPrints()
+        {
+            var details = GetDebugPrintDetails();
+            debugText.text = details;
+            Debug.Log(details.Replace('\n', ' '));
+        }
+
+        #endregion
+
         #region Movement Methods
 
         private void UpdateMovement()
@@ -132,22 +163,9 @@ namespace Assets.Scripts
             ApplySpeedDecay();
         }
 
-        private string GetDebugPrintDetails()
+        private void UpdateVelocity()
         {
-            return string.Format("HOR : {0}\nVER : {1}\nDIR : {2}:{3}\nX : {4}\nY : {5}",
-                velocity.x,
-                velocity.y,
-                animator.GetInteger("Direction").ToString().PadLeft(2),
-                (Directions)animator.GetInteger("Direction"),
-                rb2D.position.x,
-                rb2D.position.y);
-        }
-
-        private void KinematicsDebugPrints()
-        {
-            var details = GetDebugPrintDetails();
-            debugText.text = details;
-            Debug.Log(details.Replace('\n', '\t'));
+            UpdateVelocity(input.x, input.y);
         }
 
         private void UpdateVelocity(float horizontal, float vertical)
@@ -156,7 +174,7 @@ namespace Assets.Scripts
                 velocity.y += Mathf.Sign(vertical) * speed / HUMAN_TO_VECTOR_SCALE_FACTOR;
             if (horizontal != 0)
                 velocity.x += Mathf.Sign(horizontal) * speed / HUMAN_TO_VECTOR_SCALE_FACTOR;
-            animator.speed = ANIM_SPEED_MODIFIER * velocity.MaxOfXandY() ;
+            animator.speed = ANIM_SPEED_MODIFIER * velocity.GetDimensionByDirection(direction);
         }
 
         private void ApplySpeedDecay()
