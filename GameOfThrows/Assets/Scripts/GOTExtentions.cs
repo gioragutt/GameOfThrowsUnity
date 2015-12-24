@@ -1,5 +1,4 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace Assets.Scripts
 {
@@ -35,9 +34,9 @@ namespace Assets.Scripts
         public static float GetDimensionByDirection(this Vector2 vector, Directions direction)
         {
             if (direction == Directions.Back || direction == Directions.Front)
-                return vector.y;
+                return Mathf.Abs(vector.y);
             if (direction == Directions.Left || direction == Directions.Right)
-                return vector.x;
+                return Mathf.Abs(vector.x);
             return 0;
         }
     }
