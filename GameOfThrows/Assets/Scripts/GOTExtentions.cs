@@ -38,8 +38,7 @@ namespace Assets.Scripts
                 return vector.y;
             if (direction == Directions.Left || direction == Directions.Right)
                 return vector.x;
-
-            throw new ArgumentException("Can't get a direction for Directions.Idle");
+            return 0;
         }
     }
 }
