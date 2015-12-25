@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
+// ReSharper disable UnusedMember.Local
 
 namespace Assets.Scripts
 {
@@ -83,9 +84,13 @@ namespace Assets.Scripts
             input = Vector2.zero;
         }
 
-        private void FixedUpdate()
+        private void Update()
         {
             UpdateInput();
+        }
+
+        private void FixedUpdate()
+        {
             UpdateVelocity();
             UpdateAnimation();
             UpdateMovement();
