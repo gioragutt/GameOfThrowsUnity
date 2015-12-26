@@ -88,7 +88,9 @@ namespace Assets.Scripts
 
             if (Camera.main.orthographicSize > maxSize)
                 Camera.main.orthographicSize = maxSize;
-            
+            if (Camera.main.orthographicSize < 1)
+                Camera.main.orthographicSize = 1;
+
         }
     }
 }
