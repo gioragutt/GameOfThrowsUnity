@@ -18,7 +18,7 @@ namespace Assets.Scripts
 
     public class BoardManager : MonoBehaviour
     {
-        private const int BORDER_COL = -1;
+        public const int BORDER_COL = -1;
         public int columns = 15;
         public int rows = 15;
 
@@ -27,6 +27,7 @@ namespace Assets.Scripts
         public GameObject[] floorTiles;
         
         private readonly List<Vector3> floorPositions = new List<Vector3>();
+        private readonly List<Vector3> takenPositions = new List<Vector3>(); 
 
         private Transform boardHolder;
         private Transform floorHolder;
@@ -100,6 +101,8 @@ namespace Assets.Scripts
                     GameObject instance =
                         Instantiate(toInstantiate, new Vector3(col, row, 0f), Quaternion.identity) as GameObject;
 
+                    takenPositions.Add(new Vector3(col, row, 0f));
+
                     if (instance == null) continue;
 
                     instance.transform.SetParent(wallsHolder);
@@ -116,11 +119,15 @@ namespace Assets.Scripts
             return position;
         }
 
-        private void LayoutObjectsAtRandom(GameObject[] objects, int amount, Transform parent)
+        private void LayoutObjectsAtRandom(GameObject[] objects, int amount, Transform parent, bool solid)
         {
             for (int i = 0; i < amount; ++i)
             {
                 Vector3 position = RandomPosition();
+
+                if (solid)
+                    takenPositions.Add(position);
+
                 GameObject instantiatedObject = objects[Random.Range(0, objects.Length)];
                 GameObject instantiated = Instantiate(instantiatedObject, position, Quaternion.identity) as GameObject;
 
@@ -155,9 +162,7 @@ namespace Assets.Scripts
             bottomCollider.AddComponent<BoxCollider2D>();
             bottomCollider.transform.parent = colliders.transform;
 
-            const float LOWER_LIMIT = -1;
-
-            leftCollider.transform.position = new Vector3(LOWER_LIMIT, rows / 2);
+            leftCollider.transform.position = new Vector3(BORDER_COL, rows / 2);
             leftCollider.transform.localScale = new Vector3(1, rows, 1);
 
             rightCollider.transform.position = new Vector3(columns, rows / 2);
@@ -166,8 +171,19 @@ namespace Assets.Scripts
             topCollider.transform.position = new Vector3(columns / 2, rows);
             topCollider.transform.localScale = new Vector3(columns, 1, 1);
 
-            bottomCollider.transform.position = new Vector3(columns / 2, LOWER_LIMIT);
+            bottomCollider.transform.position = new Vector3(columns / 2, BORDER_COL);
             bottomCollider.transform.localScale = new Vector3(columns, 1, 1);
+        }
+
+        private void SetRandomPlayerPosition()
+        {
+            Vector2 playerPosition = new Vector2(Random.Range(-1, columns), Random.Range(-1, rows));
+            while (takenPositions.Contains(playerPosition))
+            {
+                playerPosition = new Vector2(Random.Range(-1, columns), Random.Range(-1, rows));
+            }
+
+            GameObject.FindWithTag("Player").GetComponent<Rigidbody2D>().position = playerPosition;
         }
 
         /// <summary>
@@ -178,9 +194,10 @@ namespace Assets.Scripts
         {
             InitializeFloorPositionsList();
             SetUpWalls();
-            LayoutObjectsAtRandom(wallTiles, extraWalls, wallsHolder);
-            LayoutObjectsAtRandom(floorTiles, floorPositions.Count, floorHolder);
+            LayoutObjectsAtRandom(wallTiles, extraWalls, wallsHolder, true);
+            LayoutObjectsAtRandom(floorTiles, floorPositions.Count, floorHolder, false);
             CreateWallsColliders();
+            SetRandomPlayerPosition();
         }
     }
 }
