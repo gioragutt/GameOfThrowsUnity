@@ -99,7 +99,11 @@ namespace Assets.Scripts
                     GameObject toInstantiate = wallTiles[(int)pos];
                     GameObject instance =
                         Instantiate(toInstantiate, new Vector3(col, row, 0f), Quaternion.identity) as GameObject;
+
+                    if (instance == null) continue;
+
                     instance.transform.SetParent(wallsHolder);
+                    instance.gameObject.GetComponent<BoxCollider2D>().enabled = false;
                 }
             }
         }
@@ -119,8 +123,51 @@ namespace Assets.Scripts
                 Vector3 position = RandomPosition();
                 GameObject instantiatedObject = objects[Random.Range(0, objects.Length)];
                 GameObject instantiated = Instantiate(instantiatedObject, position, Quaternion.identity) as GameObject;
+
+                if (instantiated == null) continue;
+
                 instantiated.transform.SetParent(parent);
             }
+        }
+
+        private void CreateWallsColliders()
+        {
+            GameObject colliders = new GameObject("Colliders");
+            colliders.transform.position = Vector3.zero;
+
+            GameObject leftCollider = new GameObject("LeftCollider");
+            leftCollider.transform.position = Vector3.zero;
+            leftCollider.AddComponent<BoxCollider2D>();
+            leftCollider.transform.parent = colliders.transform;
+
+            GameObject rightCollider = new GameObject("RightCollider");
+            rightCollider.transform.position = Vector3.zero;
+            rightCollider.AddComponent<BoxCollider2D>();
+            rightCollider.transform.parent = colliders.transform;
+
+            GameObject topCollider = new GameObject("TopCollider");
+            topCollider.transform.position = Vector3.zero;
+            topCollider.AddComponent<BoxCollider2D>();
+            topCollider.transform.parent = colliders.transform;
+
+            GameObject bottomCollider = new GameObject("BottomCollider");
+            bottomCollider.transform.position = Vector3.zero;
+            bottomCollider.AddComponent<BoxCollider2D>();
+            bottomCollider.transform.parent = colliders.transform;
+
+            const float LOWER_LIMIT = -1;
+
+            leftCollider.transform.position = new Vector3(LOWER_LIMIT, rows / 2);
+            leftCollider.transform.localScale = new Vector3(1, rows, 1);
+
+            rightCollider.transform.position = new Vector3(columns, rows / 2);
+            rightCollider.transform.localScale = new Vector3(1, rows, 1);
+
+            topCollider.transform.position = new Vector3(columns / 2, rows);
+            topCollider.transform.localScale = new Vector3(columns, 1, 1);
+
+            bottomCollider.transform.position = new Vector3(columns / 2, LOWER_LIMIT);
+            bottomCollider.transform.localScale = new Vector3(columns, 1, 1);
         }
 
         /// <summary>
@@ -133,6 +180,7 @@ namespace Assets.Scripts
             SetUpWalls();
             LayoutObjectsAtRandom(wallTiles, extraWalls, wallsHolder);
             LayoutObjectsAtRandom(floorTiles, floorPositions.Count, floorHolder);
+            CreateWallsColliders();
         }
     }
 }

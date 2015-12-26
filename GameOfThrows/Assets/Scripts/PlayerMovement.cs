@@ -13,6 +13,7 @@ namespace Assets.Scripts
         Idle = -1
     }
 
+    [RequireComponent(typeof(Rigidbody2D), typeof(Animator))]
     public class PlayerMovement : MonoBehaviour
     {
         #region Public Members
@@ -26,6 +27,8 @@ namespace Assets.Scripts
         /// Debug UI.Text element
         /// </summary>
         public Text debugText;
+
+        public float debugSpeedBoost = 5f;
 
         #endregion
 
@@ -141,7 +144,7 @@ namespace Assets.Scripts
 
         private string GetDebugPrintDetails()
         {
-            return string.Format("HOR : {0}\nVER : {1}\nDIR : {2}:{3}\nX : {4}\nY : {5}",
+            return string.Format("HOR : {0}\nVER : {1}\nDIR : {2}/{3}\nX : {4}\nY : {5}",
                 velocity.x,
                 velocity.y,
                 ((int)direction).ToString().PadLeft(2),
@@ -173,12 +176,28 @@ namespace Assets.Scripts
             UpdateVelocity(input.x, input.y);
         }
 
+        private float SpeedBoost()
+        {
+            return Input.GetKey(KeyCode.LeftControl) ? debugSpeedBoost : 1f;
+        }
+
+        private float HumanToVectorSpeed(float humanScaleSpeed)
+        {
+            return humanScaleSpeed / HUMAN_TO_VECTOR_SCALE_FACTOR;
+        }
+
         private void UpdateVelocity(float horizontal, float vertical)
         {
             if (vertical != 0)
-                velocity.y += Mathf.Sign(vertical) * speed / HUMAN_TO_VECTOR_SCALE_FACTOR;
+            {
+                velocity.y += Mathf.Sign(vertical) *
+                    speed / HUMAN_TO_VECTOR_SCALE_FACTOR *
+                    (Input.GetKey(KeyCode.LeftControl) ? debugSpeedBoost : 1f);
+            }
             if (horizontal != 0)
-                velocity.x += Mathf.Sign(horizontal) * speed / HUMAN_TO_VECTOR_SCALE_FACTOR;
+            {
+                velocity.x += Mathf.Sign(horizontal) * HumanToVectorSpeed(speed) * SpeedBoost();
+            }
             animator.speed = ANIM_SPEED_MODIFIER * velocity.GetDimensionByDirection(direction);
         }
 
