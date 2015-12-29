@@ -1,0 +1,7 @@
+C:\Users\Guttsait\Desktop\ChatServer\GotServerLibrary\obj\Debug\GotServerLibrary.csprojResolveAssemblyReference.cache
+C:\Users\Guttsait\Desktop\ChatServer\GotServerLibrary\bin\Debug\GotServerLibrary.dll
+C:\Users\Guttsait\Desktop\ChatServer\GotServerLibrary\bin\Debug\GotServerLibrary.pdb
+C:\Users\Guttsait\Desktop\ChatServer\GotServerLibrary\bin\Debug\GotLib.dll
+C:\Users\Guttsait\Desktop\ChatServer\GotServerLibrary\bin\Debug\GotLib.pdb
+C:\Users\Guttsait\Desktop\ChatServer\GotServerLibrary\obj\Debug\GotServerLibrary.dll
+C:\Users\Guttsait\Desktop\ChatServer\GotServerLibrary\obj\Debug\GotServerLibrary.pdb
