@@ -5,11 +5,12 @@ namespace Assets.Scripts
     public class GameManager : MonoBehaviour
     {
         public BoardManager boardScript;
-        public static GameManager instance = null;
+        public static GameManager instance;
+        public int extraWalls = 5;
 
         void InitGame()
         {
-            boardScript.SetUpScene(5);
+            boardScript.SetUpScene(extraWalls);
         }
 
         #region Game Loop Functions
@@ -24,18 +25,6 @@ namespace Assets.Scripts
             DontDestroyOnLoad(gameObject);
             boardScript = GetComponent<BoardManager>();
             InitGame();
-        }
-
-        // Use this for initialization
-        void Start()
-        {
-
-        }
-
-        // Update is called once per frame
-        void Update()
-        {
-
         }
         
         #endregion

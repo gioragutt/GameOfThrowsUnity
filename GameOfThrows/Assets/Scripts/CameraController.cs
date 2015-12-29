@@ -32,8 +32,9 @@ namespace Assets.Scripts
             aspect = Camera.main.aspect;
 
             min = new Vector2(BoardManager.BORDER_COL, BoardManager.BORDER_COL);
-            max = new Vector2(boardManager.rows, boardManager.columns);
+            max = new Vector2(boardManager.columns, boardManager.rows);
             maxSize = max.x <= max.y ? max.x / 2f / aspect : max.y / 2f;
+            maxSize = maxSize > 6f ? 6f : maxSize;
         }
 
         public void Update()
@@ -44,13 +45,17 @@ namespace Assets.Scripts
 
         #endregion
 
+        #region Camera Update Methods
+
         private void UpdateCameraPosition()
         {
             var x = transform.position.x;
             var y = transform.position.y;
 
-            if (isFollowing) FollowPlayer(ref x, ref y);
-            if (isBound) BoundToMap(ref x, ref y);
+            if (isFollowing)
+                FollowPlayer(ref x, ref y);
+            if (isBound)
+                BoundToMap(ref x, ref y);
 
             transform.position = new Vector3(x, y, transform.position.z);
         }
@@ -80,17 +85,17 @@ namespace Assets.Scripts
                 y = Mathf.Lerp(y, player.position.y, smoothing.y * Time.deltaTime);
         }
 
-
         private void UpdateCameraSize()
         {
             float size = Input.GetAxis("Mouse ScrollWheel");
-            Camera.main.orthographicSize += size;
+            Camera.main.orthographicSize -= size;
 
             if (Camera.main.orthographicSize > maxSize)
                 Camera.main.orthographicSize = maxSize;
             if (Camera.main.orthographicSize < 1)
                 Camera.main.orthographicSize = 1;
-
         }
+
+        #endregion
     }
 }

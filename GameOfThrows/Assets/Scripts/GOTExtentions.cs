@@ -1,4 +1,7 @@
-﻿using UnityEngine;
+﻿using System.Collections;
+using System.Linq;
+using JetBrains.Annotations;
+using UnityEngine;
 
 namespace Assets.Scripts
 {
@@ -9,9 +12,15 @@ namespace Assets.Scripts
         /// </summary>
         /// <param name="vector">this</param>
         /// <returns>float that is the maximum and x and y</returns>
-        public static float MaxOfXandY(this Vector2 vector)
+        public static float BiggestDimension(this Vector2 vector)
         {
-            return Mathf.Max(Mathf.Abs(vector.x), Mathf.Abs(vector.y));
+            float max = vector[0];
+
+            for (int i = 1; i < vector.magnitude; ++i)
+                if (vector[i] > max)
+                    max = vector[i];
+
+            return max;
         }
 
         /// <summary>
@@ -38,6 +47,16 @@ namespace Assets.Scripts
             if (direction == Directions.Left || direction == Directions.Right)
                 return Mathf.Abs(vector.x);
             return 0;
+        }
+
+        public static bool IsNotEqualToAny(this object thisObject, params object[] objectsList)
+        {
+            return !objectsList.Contains(thisObject);
+        }
+
+        public static object GetRandom(IList list)
+        {
+            return list[Random.Range(0, list.Count)];
         }
     }
 }

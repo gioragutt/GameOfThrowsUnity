@@ -1,5 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using JetBrains.Annotations;
 using UnityEngine;
+using Random = UnityEngine.Random;
+
+// ReSharper disable UseNullPropagation
 
 namespace Assets.Scripts
 {
@@ -63,23 +68,19 @@ namespace Assets.Scripts
             {
                 if (col == BORDER_COL)
                     return BlockPosition.BottomLeft;    // 7
-                if (col == columns)
-                    return BlockPosition.BottomRight;   // 9
-                return BlockPosition.Bottom;            // 8
+                return col == columns 
+                    ? BlockPosition.BottomRight 
+                    : BlockPosition.Bottom;
             }
-            if (row == rows)
+            if (row != rows)
             {
                 if (col == BORDER_COL)
-                    return BlockPosition.TopLeft;       // 1
-                if (col == columns)
-                    return BlockPosition.TopRight;      // 3
-                return BlockPosition.Top;               // 2
+                    return BlockPosition.Left;
+                return col == columns ? BlockPosition.Right : BlockPosition.None;
             }
             if (col == BORDER_COL)
-                return BlockPosition.Left;              // 4
-            if (col == columns)
-                return BlockPosition.Right;             // 6
-            return BlockPosition.None;                  // 5
+                return BlockPosition.TopLeft;
+            return col == columns ? BlockPosition.TopRight : BlockPosition.Top;
         }
 
         private void SetUpWalls()
@@ -119,8 +120,10 @@ namespace Assets.Scripts
             return position;
         }
 
-        private void LayoutObjectsAtRandom(GameObject[] objects, int amount, Transform parent, bool solid)
+        private void LayoutObjectsAtRandom([NotNull]IList<GameObject> objects, int amount, [NotNull]Transform parent, bool solid)
         {
+            if (amount < 0) throw new ArgumentException("Amount must be higher or equal to 0");
+
             for (int i = 0; i < amount; ++i)
             {
                 Vector3 position = RandomPosition();
@@ -128,7 +131,7 @@ namespace Assets.Scripts
                 if (solid)
                     takenPositions.Add(position);
 
-                GameObject instantiatedObject = objects[Random.Range(0, objects.Length)];
+                GameObject instantiatedObject = objects[Random.Range(0, objects.Count)];
                 GameObject instantiated = Instantiate(instantiatedObject, position, Quaternion.identity) as GameObject;
 
                 if (instantiated == null) continue;
@@ -162,28 +165,37 @@ namespace Assets.Scripts
             bottomCollider.AddComponent<BoxCollider2D>();
             bottomCollider.transform.parent = colliders.transform;
 
+            const float FIX = 0.5f;
+
             leftCollider.transform.position = new Vector3(BORDER_COL, rows / 2);
             leftCollider.transform.localScale = new Vector3(1, rows, 1);
 
             rightCollider.transform.position = new Vector3(columns, rows / 2);
             rightCollider.transform.localScale = new Vector3(1, rows, 1);
 
-            topCollider.transform.position = new Vector3(columns / 2, rows);
+            topCollider.transform.position = new Vector3(columns / 2 - FIX, rows);
             topCollider.transform.localScale = new Vector3(columns, 1, 1);
 
-            bottomCollider.transform.position = new Vector3(columns / 2, BORDER_COL);
+            bottomCollider.transform.position = new Vector3(columns / 2 - FIX, BORDER_COL);
             bottomCollider.transform.localScale = new Vector3(columns, 1, 1);
         }
 
         private void SetRandomPlayerPosition()
         {
-            Vector2 playerPosition = new Vector2(Random.Range(-1, columns), Random.Range(-1, rows));
-            while (takenPositions.Contains(playerPosition))
-            {
-                playerPosition = new Vector2(Random.Range(-1, columns), Random.Range(-1, rows));
-            }
+            GameObject.FindWithTag("Player").GetComponent<Rigidbody2D>().position = GetAvailablePositionOnMap();
+        }
 
-            GameObject.FindWithTag("Player").GetComponent<Rigidbody2D>().position = playerPosition;
+        private Vector2 GetAvailablePositionOnMap(bool takePlace = false)
+        {
+            Vector2 availablePosition = new Vector2(Random.Range(-1, columns), Random.Range(-1, rows));
+
+            while (takenPositions.Contains(availablePosition))
+                availablePosition = new Vector2(Random.Range(-1, columns), Random.Range(-1, rows));
+
+            if (takePlace)
+                takenPositions.Add(availablePosition);
+
+            return availablePosition;
         }
 
         /// <summary>

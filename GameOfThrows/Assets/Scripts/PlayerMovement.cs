@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿using System.Text;
+using GotLib;
+using UnityEngine;
 using UnityEngine.UI;
 // ReSharper disable UnusedMember.Local
 
@@ -14,20 +16,12 @@ namespace Assets.Scripts
     }
 
     [RequireComponent(typeof(Rigidbody2D), typeof(Animator))]
-    public class PlayerMovement : MonoBehaviour
+    public class PlayerMovement : MonoBehaviour, IPlayerData
     {
         #region Public Members
 
-        /// <summary>
-        /// Maximum speed of the player (Accelerated to over a period of time)
-        /// </summary>
         public float speed;
-
-        /// <summary>
-        /// Debug UI.Text element
-        /// </summary>
         public Text debugText;
-
         public float debugSpeedBoost = 5f;
 
         #endregion
@@ -142,22 +136,24 @@ namespace Assets.Scripts
 
         #region DEBUG
 
-        private string GetDebugPrintDetails()
+        private StringBuilder GetDebugPrintDetails()
         {
-            return string.Format("HOR : {0}\nVER : {1}\nDIR : {2}/{3}\nX : {4}\nY : {5}",
+            StringBuilder builder = new StringBuilder();
+            builder.AppendFormat("(HOR : {0})\n(VER : {1})\n(DIR : {2}/{3})\n(X : {4})\n(Y : {5})",
                 velocity.x,
                 velocity.y,
                 ((int)direction).ToString().PadLeft(2),
                 direction,
                 rb2D.position.x,
                 rb2D.position.y);
+            return builder;
         }
 
         private void KinematicsDebugPrints()
         {
             var details = GetDebugPrintDetails();
-            debugText.text = details;
-            Debug.Log(details.Replace('\n', ' '));
+            debugText.text = new StringBuilder(details.ToString()).Replace("(", "").Replace(")", "").ToString();
+            Debug.Log(details.Replace('\n', ' ').ToString());
         }
 
         #endregion
@@ -181,7 +177,7 @@ namespace Assets.Scripts
             return Input.GetKey(KeyCode.LeftControl) ? debugSpeedBoost : 1f;
         }
 
-        private float HumanToVectorSpeed(float humanScaleSpeed)
+        private static float HumanToVectorSpeed(float humanScaleSpeed)
         {
             return humanScaleSpeed / HUMAN_TO_VECTOR_SCALE_FACTOR;
         }
@@ -207,6 +203,19 @@ namespace Assets.Scripts
 
             velocity *= VELOCITY_DECAY_FACTOR;
             velocity = velocity.ZerofiyTinyValues(VELOCITY_EPSILON);
+        }
+
+        #endregion
+
+        #region IPlayerData Methods
+
+        public PlayerData GetPlayerData()
+        {
+            return new PlayerData
+            {
+                xPos = rb2D.position.x,
+                yPos = rb2D.position.y
+            };
         }
 
         #endregion
