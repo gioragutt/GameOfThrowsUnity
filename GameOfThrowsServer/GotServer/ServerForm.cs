@@ -56,26 +56,50 @@ namespace GotServer
 
         private void Server_OnClientUpdated(Client client)
         {
-            var indexInList = clientsListBox.Items.IndexOf(client);
-
-            if (indexInList != -1)
+            if (InvokeRequired)
             {
-                clientsListBox.Items[indexInList] = client;
+                Server.ClientUpdateDelegate clientUpdateOperation = Server_OnClientUpdated;
+                Invoke(clientUpdateOperation, client);
             }
             else
             {
-                ShowError("Client {0} updated while not in list", client.endPoint);
+                var indexInList = clientsListBox.Items.IndexOf(client);
+
+                if (indexInList != -1)
+                {
+                    clientsListBox.Items[indexInList] = client;
+                }
+                else
+                {
+                    ShowError("Client {0} updated while not in list", client.endPoint);
+                }
             }
         }
 
         private void Server_OnClientDisconneced(Client client)
         {
-            clientsListBox.Items.Remove(client);
+            if (InvokeRequired)
+            {
+                Server.ClientUpdateDelegate clientUpdateOperation = Server_OnClientDisconneced;
+                Invoke(clientUpdateOperation, client);
+            }
+            else
+            {
+                clientsListBox.Items.Remove(client);
+            }
         }
 
         private void Server_OnClientConnected(Client client)
         {
-            clientsListBox.Items.Add(client);
+            if (InvokeRequired)
+            {
+                Server.ClientUpdateDelegate clientUpdateOperation = Server_OnClientConnected;
+                Invoke(clientUpdateOperation, client);
+            }
+            else
+            {
+                clientsListBox.Items.Add(client);
+            }
         }
 
         private void Server_OnDataRecieved(Packet status)

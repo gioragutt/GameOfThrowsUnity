@@ -27,6 +27,8 @@ namespace Assets.Scripts
             set { UdpClient.Client = value; }
         }
 
+        private bool logoutRequested = false;
+
         #endregion
 
         #region Constants
@@ -39,6 +41,8 @@ namespace Assets.Scripts
 
         public void ConnectToServerAndStartListening(string ipAddress)
         {
+            logoutRequested = false;
+
             // Initialize the login packet that would be sent to the server
             Packet loginPacket = GetPacketToSend(DataIdentifier.LogIn, playerData.GetPlayerData(), name);
 
@@ -84,8 +88,7 @@ namespace Assets.Scripts
 
                 SendPacketToServer(logoutPacket);
 
-                // Close the socket
-                ClientSocket.Close();
+                logoutRequested = true;
             }
             catch (Exception ex)
             {
@@ -153,6 +156,9 @@ namespace Assets.Scripts
             try
             {
                 ClientSocket.EndSend(ar);
+                if (!logoutRequested)
+                    return;
+                UdpClient.Close();
             }
             catch (Exception ex)
             {

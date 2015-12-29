@@ -51,7 +51,7 @@ namespace GotServerLibrary
         #region Public Members
 
         // Listing of clients
-        public List<Client> ClientList { get; set; }
+        public ClientList ClientList { get; set; }
 
         #endregion
 
@@ -81,7 +81,7 @@ namespace GotServerLibrary
             try
             {
                 // Initialise the ArrayList of connected clients
-                ClientList = new List<Client>();
+                ClientList = new ClientList();
 
                 // Initialise the socket
                 UdpClient = new UdpClient(AddressFamily.InterNetwork)
@@ -150,20 +150,20 @@ namespace GotServerLibrary
                 EndPoint epSender = clients;
 
                 // Receive all data
-                UdpClient.EndReceive(asyncResult, ref clients);
+                UdpClient.Client.EndReceiveFrom(asyncResult, ref epSender);
 
                 // Analyza recieved packet and get return packet
-                var sendData = GetSendDataPacket(receivedData, clients);
+                var sendData = GetSendDataPacket(receivedData, epSender);
 
                 // Get packet as byte array
                 var data = sendData.ToByteArray();
 
                 // Send data to other clients
                 DistributeData(clients, sendData, data);
-                
+
                 // Listen for more connections again...
                 UdpClient.Client.BeginReceiveFrom(DataStream, 0, DataStream.Length, SocketFlags.None, ref epSender,
-                    ReceiveData, clients);
+                    ReceiveData, epSender);
 
                 // Update data through a delegate
                 OnDataRecieved(sendData);
@@ -190,7 +190,7 @@ namespace GotServerLibrary
 
         private void ProcessMessageData(Packet receivedData, EndPoint epSender, Packet dataPacket)
         {
-            Client sendingClient = ClientList.FirstOrDefault(c => c.endPoint.ToString() == epSender.ToString());
+            Client sendingClient = ClientList.GetClient(epSender);
 
             switch (receivedData.DataIdentifier)
             {
@@ -217,7 +217,7 @@ namespace GotServerLibrary
                 if (client.endPoint.ToString() != epSender.ToString())
                 {
                     // Broadcast to all logged on users except for sending client
-                    UdpClient.BeginSend(data, data.Length, SendData, client.endPoint);
+                    UdpClient.Client.BeginSendTo(data, 0, data.Length, SocketFlags.None, client.endPoint, SendData, client.endPoint);
                 }
             }
         }

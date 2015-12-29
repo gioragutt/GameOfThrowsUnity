@@ -167,10 +167,10 @@ namespace Assets.Scripts
 
             const float FIX = 0.5f;
 
-            leftCollider.transform.position = new Vector3(BORDER_COL, rows / 2);
+            leftCollider.transform.position = new Vector3(BORDER_COL, rows / 2 - FIX);
             leftCollider.transform.localScale = new Vector3(1, rows, 1);
 
-            rightCollider.transform.position = new Vector3(columns, rows / 2);
+            rightCollider.transform.position = new Vector3(columns, rows / 2 - FIX);
             rightCollider.transform.localScale = new Vector3(1, rows, 1);
 
             topCollider.transform.position = new Vector3(columns / 2 - FIX, rows);

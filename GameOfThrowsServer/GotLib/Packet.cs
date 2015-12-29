@@ -42,28 +42,6 @@ namespace GotLib
             Name = null;
         }
 
-        public static Packet PacketFromStream(Stream stream)
-        {
-            using (var reader = new BinaryReader(stream))
-            {
-                var identifier = new byte[sizeof(int)];
-                reader.Read(identifier, (int)stream.Position, sizeof(int));
-                var nameLengthArray = new byte[sizeof(int)];
-                reader.Read(nameLengthArray, (int)stream.Position, sizeof(int));
-                var nameLength = BitConverter.ToInt32(nameLengthArray, 0);
-                var msgLengthArray = new byte[sizeof(int)];
-                reader.Read(msgLengthArray, (int)stream.Position, sizeof(int));
-                var msgLength = BitConverter.ToInt32(msgLengthArray, 0);
-                var name = new byte[nameLength];
-                reader.Read(name, (int)stream.Position, nameLength);
-                var message = new byte[msgLength];
-                reader.Read(message, (int)stream.Position, msgLength);
-                var combined =
-                    identifier.Concat(nameLengthArray).Concat(msgLengthArray).Concat(name).Concat(message);
-                return PacketFromBytes(combined.ToArray());
-            }
-        }
-
         public static Packet PacketFromBytes(byte[] dataStream)
         {
             const int DATA_IDENTIFIER_INDEX = 0;
