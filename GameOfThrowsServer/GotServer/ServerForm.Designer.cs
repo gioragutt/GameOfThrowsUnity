@@ -110,6 +110,7 @@
             // 
             this.txtStatus.Location = new System.Drawing.Point(201, 6);
             this.txtStatus.Name = "txtStatus";
+            this.txtStatus.ReadOnly = true;
             this.txtStatus.Size = new System.Drawing.Size(405, 20);
             this.txtStatus.TabIndex = 9;
             // 

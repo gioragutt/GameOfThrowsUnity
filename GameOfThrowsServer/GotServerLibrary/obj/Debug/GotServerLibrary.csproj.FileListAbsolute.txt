@@ -5,3 +5,10 @@ C:\Users\Guttsait\Desktop\ChatServer\GotServerLibrary\bin\Debug\GotLib.dll
 C:\Users\Guttsait\Desktop\ChatServer\GotServerLibrary\bin\Debug\GotLib.pdb
 C:\Users\Guttsait\Desktop\ChatServer\GotServerLibrary\obj\Debug\GotServerLibrary.dll
 C:\Users\Guttsait\Desktop\ChatServer\GotServerLibrary\obj\Debug\GotServerLibrary.pdb
+C:\GameOfThrowsUnityRepository\GameOfThrowsUnity\GameOfThrowsServer\GotServerLibrary\bin\Debug\GotServerLibrary.dll
+C:\GameOfThrowsUnityRepository\GameOfThrowsUnity\GameOfThrowsServer\GotServerLibrary\bin\Debug\GotServerLibrary.pdb
+C:\GameOfThrowsUnityRepository\GameOfThrowsUnity\GameOfThrowsServer\GotServerLibrary\bin\Debug\GotLib.dll
+C:\GameOfThrowsUnityRepository\GameOfThrowsUnity\GameOfThrowsServer\GotServerLibrary\bin\Debug\GotLib.pdb
+C:\GameOfThrowsUnityRepository\GameOfThrowsUnity\GameOfThrowsServer\GotServerLibrary\obj\Debug\GotServerLibrary.csprojResolveAssemblyReference.cache
+C:\GameOfThrowsUnityRepository\GameOfThrowsUnity\GameOfThrowsServer\GotServerLibrary\obj\Debug\GotServerLibrary.dll
+C:\GameOfThrowsUnityRepository\GameOfThrowsUnity\GameOfThrowsServer\GotServerLibrary\obj\Debug\GotServerLibrary.pdb

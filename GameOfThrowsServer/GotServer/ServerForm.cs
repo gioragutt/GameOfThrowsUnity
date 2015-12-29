@@ -15,7 +15,6 @@ namespace GotServer
         #region Private Members
 
         private Server server;
-        private BindingSource clientsSource;
 
         #endregion
 
@@ -37,16 +36,11 @@ namespace GotServer
                 // Initialize the server
                 server = new Server();
 
-                clientsSource = new BindingSource { DataSource = server.ClientList };
-
-                clientsSource.ResetBindings(true);
-                clientsListBox.DataSource = clientsSource;
-
                 // Initialize the delegate which updates the data
-                server.DataRecieved += UpdateStatus;
-                server.ClientConnected += Server_ClientListUpdated;
-                server.ClientDisconneced += Server_ClientListUpdated;
-                server.ClientUpdated += Server_ClientListUpdated;
+                server.DataRecieved += Server_OnDataRecieved;
+                server.ClientConnected += Server_OnClientConnected;
+                server.ClientDisconneced += Server_OnClientDisconneced;
+                server.ClientUpdated += Server_OnClientUpdated;
 
                 server.StartListen();
 
@@ -60,31 +54,35 @@ namespace GotServer
             }
         }
 
-        private void ShowError(string message)
+        private void Server_OnClientUpdated(Client client)
         {
-            lblStatus.Text = "Error";
-            txtStatus.Text = message;
+            var indexInList = clientsListBox.Items.IndexOf(client);
+
+            if (indexInList != -1)
+            {
+                clientsListBox.Items[indexInList] = client;
+            }
+            else
+            {
+                ShowError("Client {0} updated while not in list", client.endPoint);
+            }
         }
 
-        private void Server_ClientListUpdated(Client client)
+        private void Server_OnClientDisconneced(Client client)
         {
-            clientsSource.ResetBindings(true);
+            clientsListBox.Items.Remove(client);
         }
 
-        private void btnExit_Click(object sender, EventArgs e)
+        private void Server_OnClientConnected(Client client)
         {
-            Close();
+            clientsListBox.Items.Add(client);
         }
 
-        #endregion
-
-        #region Other Methods
-
-        private void UpdateStatus(Packet status)
+        private void Server_OnDataRecieved(Packet status)
         {
             if (InvokeRequired)
             {
-                Server.DataRecievedDelegate dataRecievedOperation = UpdateStatus;
+                Server.DataRecievedDelegate dataRecievedOperation = Server_OnDataRecieved;
                 Invoke(dataRecievedOperation, status);
             }
             else
@@ -92,6 +90,20 @@ namespace GotServer
                 HandleUpdatePacket(status);
             }
         }
+
+        private void btnExit_Click(object sender, EventArgs e)
+        {
+            Close();
+        }
+
+        private void ServerForm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            server.Dispose();
+        }
+
+        #endregion
+
+        #region Other Methods
 
         private Packet previousStatus;
 
@@ -110,11 +122,17 @@ namespace GotServer
             previousStatus = status;
         }
 
-        #endregion
-
-        private void ServerForm_FormClosing(object sender, FormClosingEventArgs e)
+        private void ShowError(string format, params object[] data)
         {
-            server.Dispose();
+            ShowError(string.Format(format, data));
         }
+
+        private void ShowError(string message)
+        {
+            lblStatus.Text = "Error";
+            txtStatus.Text = message;
+        }
+
+        #endregion
     }
 }
