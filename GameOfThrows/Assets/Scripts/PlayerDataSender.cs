@@ -1,13 +1,14 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using UnityEngine;
-using GotLib;
 
 namespace Assets.Scripts
 {
     [RequireComponent(typeof(PlayerMovement))]
+    [SuppressMessage("ReSharper", "UseNullPropagation")]
     public class PlayerDataSender : MonoBehaviour
     {
         #region Public Members
@@ -57,19 +58,22 @@ namespace Assets.Scripts
         {
             if (!Input.GetKeyDown(KeyCode.F10)) return;
 
-            Server.SendLogOutMessageAndDisconnect();
+            if (Server != null)
+                Server.SendLogOutMessageAndDisconnect();
 
             Application.Quit();
         }
 
         private void FixedUpdate()
         {
-            Server.SendPlayerDataToServer();
+            if (Server != null)
+                Server.SendPlayerDataToServer();
         }
 
         private void OnApplicationQuit()
         {
-            Server.SendLogOutMessageAndDisconnect();
+            if (Server != null)
+                Server.SendLogOutMessageAndDisconnect();
         }
 
         #endregion
