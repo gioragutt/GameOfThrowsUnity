@@ -15,7 +15,7 @@ namespace Assets.Scripts
 
         #region Game Loop Functions
 
-        void Awake()
+        void Start()
         {
             if (instance == null)
                 instance = this;

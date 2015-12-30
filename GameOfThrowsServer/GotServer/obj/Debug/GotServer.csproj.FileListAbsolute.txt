@@ -1,0 +1,1 @@
+C:\Users\sharon\Documents\GitHub\GameOfThrowsUnity\GameOfThrowsServer\GotServer\bin\Debug\GotServer.exe.config
