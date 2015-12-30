@@ -1,5 +1,0 @@
-C:\Users\Guttsait\Desktop\ChatServer\GotLib\bin\Debug\GotLib.dll
-C:\Users\Guttsait\Desktop\ChatServer\GotLib\bin\Debug\GotLib.pdb
-C:\Users\Guttsait\Desktop\ChatServer\GotLib\obj\Debug\GotLib.csprojResolveAssemblyReference.cache
-C:\Users\Guttsait\Desktop\ChatServer\GotLib\obj\Debug\GotLib.dll
-C:\Users\Guttsait\Desktop\ChatServer\GotLib\obj\Debug\GotLib.pdb
