@@ -106,7 +106,7 @@ namespace GotServerLibrary
             }
             catch (Exception ex)
             {
-                throw new GotServerException(ExceptionType.Initialization, ex);
+                throw new GotServerInitializationException(ex);
             }
         }
 
@@ -120,7 +120,7 @@ namespace GotServerLibrary
             }
             catch (Exception ex)
             {
-                throw new GotServerException(ExceptionType.Initialization, ex);
+                throw new GotServerInitializationException(ex);
             }
         }
 
@@ -170,7 +170,7 @@ namespace GotServerLibrary
             }
             catch (Exception ex)
             {
-                throw new GotServerException(ExceptionType.RecieveData, ex);
+                throw new GotServerRecieveDataException(ex);
             }
         }
 
@@ -230,7 +230,7 @@ namespace GotServerLibrary
             }
             catch (Exception ex)
             {
-                throw new GotServerException(ExceptionType.SendData, ex);
+                throw new GotServerSendDataException(ex);
             }
         }
 

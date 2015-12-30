@@ -2,32 +2,50 @@
 
 namespace GotServerLibrary
 {
-    public enum ExceptionType
+    public class GotServerSendDataException : GotServerException
     {
-        Initialization,
-        SendData,
-        RecieveData
+        public GotServerSendDataException(Exception innerException)
+            : base(ExceptionType.SendData, innerException)
+        { }
+    }
+
+    public class GotServerRecieveDataException : GotServerException
+    {
+        public GotServerRecieveDataException(Exception innerException)
+            : base(ExceptionType.RecieveData, innerException)
+        { }
+    }
+
+    public class GotServerInitializationException : GotServerException
+    {
+        public GotServerInitializationException(Exception innerException)
+            : base(ExceptionType.Initialization, innerException) { }
     }
 
     public class GotServerException : Exception
     {
-        public ExceptionType ExceptionType { get; }
-
-        private static string ToExceptionMessage(ExceptionType type, string message)
+        protected enum ExceptionType
         {
-            return string.Format("{0} Error: {1}", type, message);
+            Initialization,
+            SendData,
+            RecieveData
         }
 
-        public GotServerException(ExceptionType type, Exception innerException)
-            : this(type, innerException.Message, innerException)
+        protected ExceptionType Type { get; }
+
+        public override string Message
         {
-            
+            get
+            {
+                return string.Format("{0} Error: {1} : {2}", Type, InnerException.GetType(),
+                    InnerException.Message);
+            }
         }
 
-        public GotServerException(ExceptionType type, string message, Exception innerException) 
-            : base(ToExceptionMessage(type, message), innerException)
+        protected GotServerException(ExceptionType type, Exception innerException)
+            : base("", innerException)
         {
-            ExceptionType = type;
+            Type = type;
         }
     }
 }
