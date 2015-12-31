@@ -1,9 +1,9 @@
 ﻿
 using System.Collections.Generic;
 using System.Text;
-using GotLib;
 using UnityEngine;
 using UnityEngine.UI;
+
 // ReSharper disable UnusedMember.Local
 
 namespace Assets.Scripts

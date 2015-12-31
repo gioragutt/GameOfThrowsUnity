@@ -21,7 +21,8 @@ namespace Assets.Scripts
 
         #region Private Members
 
-        private GotClient Server { get; set; }
+        private GotClient Server
+        { get; set; }
 
         #endregion
 
@@ -29,10 +30,7 @@ namespace Assets.Scripts
 
         private void Awake()
         {
-            Server = new GotClient
-            {
-                playerData = playerDataExtractor,
-            };
+            Server = new GotClient(playerDataExtractor);
         }
 
         private void Start()
@@ -46,12 +44,14 @@ namespace Assets.Scripts
             catch (Exception ex)
             {
                 Debug.LogAssertionFormat("Error connecting to server {0} : {1}", connectionIp, ex.Message);
+                Server.Dispose();
             }
         }
 
         private void Update()
         {
-            if (!Input.GetKeyDown(KeyCode.F10)) return;
+            if (!Input.GetKeyDown(KeyCode.F10))
+                return;
 
             if (Server != null)
                 Server.SendLogOutMessageAndDisconnect();
@@ -78,7 +78,8 @@ namespace Assets.Scripts
         public static string GetLocalIpAddress()
         {
             var host = Dns.GetHostEntry(Dns.GetHostName());
-            var localhost = host.AddressList.ToList().FirstOrDefault(ip => ip.AddressFamily == AddressFamily.InterNetwork);
+            var localhost =
+                host.AddressList.ToList().FirstOrDefault(ip => ip.AddressFamily == AddressFamily.InterNetwork);
             if (localhost != null)
                 return localhost.ToString();
             throw new Exception("Local IP Address Not Found!");

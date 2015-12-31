@@ -12,6 +12,11 @@ namespace GotServerLibrary
         public Guid id;
         public PlayerData data;
 
+        public string PlayerDataToString()
+        {
+            return data.ToString();
+        }
+
         public override string ToString()
         {
             return string.Format("{0} : {1}", endPoint, data);

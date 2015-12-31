@@ -105,10 +105,6 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\GotLib\GotLib.csproj">
-      <Project>{2b452392-62e5-4bd0-ae13-39fd00c40f54}</Project>
-      <Name>GotLib</Name>
-    </ProjectReference>
     <ProjectReference Include="..\GotServerLibrary\GotServerLibrary.csproj">
       <Project>{B22EF6A6-8DBF-42AA-A1DF-75B3E9EC2C08}</Project>
       <Name>GotServerLibrary</Name>

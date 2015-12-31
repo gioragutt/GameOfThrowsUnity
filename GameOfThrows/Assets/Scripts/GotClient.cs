@@ -4,22 +4,23 @@ using System.Net.Sockets;
 using GotLib;
 using UnityEngine;
 
+// ReSharper disable MergeSequentialChecks
+
 namespace Assets.Scripts
 {
-    public class GotClient
+    public class GotClient : IDisposable
     {
         #region Public Members
 
-        public IPlayerDataGetter playerData;
+        public PlayerDataExtractor playerData;
 
         #endregion
 
         #region Private Members
 
         private UdpClient UdpClient { get; set; }
-        private EndPoint serverEndpoint;
         private byte[] DataStream { get; set; }
-
+        private EndPoint serverEndpoint;
         private bool logoutRequested;
 
         #endregion
@@ -27,6 +28,11 @@ namespace Assets.Scripts
         #region Constants
 
         private const int PORT = 30000;
+
+        public GotClient(PlayerDataExtractor playerDataExtractor)
+        {
+            playerData = playerDataExtractor;
+        }
 
         #endregion
 
@@ -39,10 +45,10 @@ namespace Assets.Scripts
             // Initialize the login packet that would be sent to the server
             Packet loginPacket = GetPacketToSend(DataIdentifier.LogIn);
 
-            UdpClient = new UdpClient(AddressFamily.InterNetwork);
-
-            // Initialize socket
-            UdpClient.Client = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+            UdpClient = new UdpClient(AddressFamily.InterNetwork)
+            {
+                Client = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp)
+            };
 
             // Initialise the IPEndPoint for the server
             IPEndPoint server = new IPEndPoint(IPAddress.Parse(ipAddress), PORT);
@@ -62,11 +68,16 @@ namespace Assets.Scripts
 
         public void SendPlayerDataToServer()
         {
-            if (UdpClient.Client == null || !UdpClient.Client.Connected)
+            if (IsSendPossible())
                 return;
 
             Packet data = GetPacketToSend(DataIdentifier.Message);
             SendPacketToServer(data);
+        }
+
+        private bool IsSendPossible()
+        {
+            return UdpClient == null || UdpClient.Client == null || !UdpClient.Client.Connected;
         }
 
         public void SendLogOutMessageAndDisconnect()
@@ -104,7 +115,8 @@ namespace Assets.Scripts
             var packetData = packet.ToByteArray();
 
             // Send data to server
-            UdpClient.Client.BeginSendTo(packetData, 0, packetData.Length, SocketFlags.None, serverEndpoint, SendData, null);
+            UdpClient.Client.BeginSendTo(packetData, 0, packetData.Length, SocketFlags.None, serverEndpoint, SendData,
+                null);
         }
 
         private void AwaitMessageFromServer()
@@ -123,9 +135,8 @@ namespace Assets.Scripts
                 // Initialise a packet object to store the received data
                 Packet receivedData = Packet.PacketFromBytes(DataStream);
 
-                // Update display through a delegate
-                if (receivedData.Message != null)
-                    Debug.Log(receivedData.Message);
+                // Process data received
+                ProcessedReceivedPacket(receivedData);
 
                 // Reset data stream
                 ResetDataStream();
@@ -142,6 +153,12 @@ namespace Assets.Scripts
             {
                 Debug.LogAssertion("Receive Data Error: " + ex.Message);
             }
+        }
+
+        private static void ProcessedReceivedPacket(Packet receivedData)
+        {
+            if (receivedData.Message != null)
+                Debug.Log(receivedData.Message);
         }
 
         private void SendData(IAsyncResult ar)
@@ -194,5 +211,17 @@ namespace Assets.Scripts
         }
 
         #endregion
+
+        public void Dispose()
+        {
+            try
+            {
+                SendLogOutMessageAndDisconnect();
+            }
+            catch
+            {
+                // ignored
+            }
+        }
     }
 }

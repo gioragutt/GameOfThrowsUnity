@@ -140,7 +140,7 @@ namespace GotServer
 
         private void HandlePlayerConnection(Client client)
         {
-            var connectionMessage = string.Format("[ {0} : {1} ] Connected!", client.endPoint, client.data.name);
+            var connectionMessage = string.Format("[ {0} : {1} ] Connected!", client.endPoint, client.PlayerDataToString());
             UpdateState(connectionMessage);
             clientsListBox.Items.Add(client);
             previousPlayersMessages.Add(client.endPoint.ToString(), string.Empty);
@@ -152,13 +152,13 @@ namespace GotServer
 
         private void HandlePlayerDisconnection(Client client)
         {
-            var disconnectionMessage = string.Format("[ {0} : {1} ] Disconnected!", client.endPoint, client.data.name);
+            var disconnectionMessage = string.Format("[ {0} : {1} ] Disconnected!", client.endPoint, client.PlayerDataToString());
             UpdateState(disconnectionMessage);
             clientsListBox.Items.Remove(client);
             previousPlayersMessages.Remove(client.endPoint.ToString());
 
             txtStatusMessage.Text = disconnectionMessage;
-            txtStatusMessage.ForeColor = Color.Green;
+            txtStatusMessage.ForeColor = Color.DarkGreen;
             statusReseterStopwatch.Restart();
         }
 
@@ -171,7 +171,7 @@ namespace GotServer
             else
             {
                 clientsListBox.Items[indexInList] = client;
-                var playerData = client.data.ToString();
+                var playerData = client.PlayerDataToString();
                 if (previousPlayersMessages[client.endPoint.ToString()] == playerData) return;
 
                 UpdateState(playerData);
