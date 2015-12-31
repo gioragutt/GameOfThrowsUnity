@@ -24,7 +24,7 @@ namespace Assets.Scripts
 
         #region Game Loop Methods
 
-        public void Awake()
+        public void Start()
         {
             boardManager = GameObject.FindWithTag("GameManager").GetComponent<GameManager>().boardScript;
             isFollowing = true;

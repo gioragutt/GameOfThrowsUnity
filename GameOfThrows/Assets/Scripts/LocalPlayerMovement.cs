@@ -2,11 +2,11 @@
 
 namespace Assets.Scripts
 {
-    internal class NetworkPlayerMovement : PlayerMovement
+    public class LocalPlayerMovement : PlayerMovement
     {
         protected override bool IsLocal
         {
-            get { return false; }
+            get { return true; }
         }
 
         protected override void UpdateInput()

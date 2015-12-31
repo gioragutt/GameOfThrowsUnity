@@ -10,8 +10,7 @@ namespace Assets.Scripts
     {
         #region Public Members
 
-        public IPlayerData playerData;
-        public string name;
+        public IPlayerDataGetter playerData;
 
         #endregion
 
@@ -21,13 +20,7 @@ namespace Assets.Scripts
         private EndPoint serverEndpoint;
         private byte[] DataStream { get; set; }
 
-        private Socket ClientSocket
-        {
-            get { return UdpClient.Client; }
-            set { UdpClient.Client = value; }
-        }
-
-        private bool logoutRequested = false;
+        private bool logoutRequested;
 
         #endregion
 
@@ -44,12 +37,12 @@ namespace Assets.Scripts
             logoutRequested = false;
 
             // Initialize the login packet that would be sent to the server
-            Packet loginPacket = GetPacketToSend(DataIdentifier.LogIn, playerData.GetPlayerData(), name);
+            Packet loginPacket = GetPacketToSend(DataIdentifier.LogIn);
 
             UdpClient = new UdpClient(AddressFamily.InterNetwork);
 
             // Initialize socket
-            ClientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+            UdpClient.Client = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
 
             // Initialise the IPEndPoint for the server
             IPEndPoint server = new IPEndPoint(IPAddress.Parse(ipAddress), PORT);
@@ -69,7 +62,7 @@ namespace Assets.Scripts
 
         public void SendPlayerDataToServer()
         {
-            if (ClientSocket == null || !ClientSocket.Connected)
+            if (UdpClient.Client == null || !UdpClient.Client.Connected)
                 return;
 
             Packet data = GetPacketToSend(DataIdentifier.Message);
@@ -80,7 +73,7 @@ namespace Assets.Scripts
         {
             try
             {
-                if (ClientSocket == null)
+                if (UdpClient.Client == null)
                     throw new Exception("Already disconnected from server");
 
                 // Initialise a packet object to store the data to be sent
@@ -102,7 +95,7 @@ namespace Assets.Scripts
 
         private void ResetDataStream()
         {
-            DataStream = new byte[ClientSocket.ReceiveBufferSize];
+            DataStream = new byte[UdpClient.Client.ReceiveBufferSize];
         }
 
         private void SendPacketToServer(Packet packet)
@@ -111,12 +104,12 @@ namespace Assets.Scripts
             var packetData = packet.ToByteArray();
 
             // Send data to server
-            ClientSocket.BeginSendTo(packetData, 0, packetData.Length, SocketFlags.None, serverEndpoint, SendData, null);
+            UdpClient.Client.BeginSendTo(packetData, 0, packetData.Length, SocketFlags.None, serverEndpoint, SendData, null);
         }
 
         private void AwaitMessageFromServer()
         {
-            ClientSocket.BeginReceiveFrom(DataStream, 0, DataStream.Length, SocketFlags.None, ref serverEndpoint,
+            UdpClient.Client.BeginReceiveFrom(DataStream, 0, DataStream.Length, SocketFlags.None, ref serverEndpoint,
                 ReceiveData, null);
         }
 
@@ -125,7 +118,7 @@ namespace Assets.Scripts
             try
             {
                 // Receive all data
-                ClientSocket.EndReceive(ar);
+                UdpClient.Client.EndReceive(ar);
 
                 // Initialise a packet object to store the received data
                 Packet receivedData = Packet.PacketFromBytes(DataStream);
@@ -155,9 +148,11 @@ namespace Assets.Scripts
         {
             try
             {
-                ClientSocket.EndSend(ar);
+                UdpClient.Client.EndSend(ar);
+
                 if (!logoutRequested)
                     return;
+
                 UdpClient.Close();
             }
             catch (Exception ex)
@@ -172,7 +167,7 @@ namespace Assets.Scripts
 
         private Packet GetPacketToSend(DataIdentifier identifier)
         {
-            return GetPacketToSend(identifier, playerData.GetPlayerData(), name);
+            return GetPacketToSend(identifier, playerData.GetPlayerData());
         }
 
         /// <summary>
@@ -180,14 +175,12 @@ namespace Assets.Scripts
         /// </summary>
         /// <param name="identifier">The identifier of the message</param>
         /// <param name="data">Data to be transfered about the player</param>
-        /// <param name="playerName">Name of the player</param>
         /// <returns>Packet initialized with identifier, name and message</returns>
-        private static Packet GetPacketToSend(DataIdentifier identifier, PlayerData data, string playerName)
+        private static Packet GetPacketToSend(DataIdentifier identifier, PlayerData data)
         {
             return new Packet
             {
                 DataIdentifier = identifier,
-                Name = playerName,
                 Message = SerializedPlayerData(data)
             };
         }

@@ -7,23 +7,21 @@ using UnityEngine;
 
 namespace Assets.Scripts
 {
-    [RequireComponent(typeof(PlayerMovement))]
+    [RequireComponent(typeof(LocalPlayerMovement))]
     [SuppressMessage("ReSharper", "UseNullPropagation")]
     public class PlayerDataSender : MonoBehaviour
     {
         #region Public Members
 
-        public string playerName;
         public string ip;
         public bool useLocalHost;
+        public PlayerDataExtractor playerDataExtractor;
 
         #endregion
 
         #region Private Members
 
-        private PlayerMovement playerData;
         private GotClient Server { get; set; }
-        private string Name { get { return playerName; } }
 
         #endregion
 
@@ -31,12 +29,9 @@ namespace Assets.Scripts
 
         private void Awake()
         {
-            playerData = GetComponent<PlayerMovement>();
-
             Server = new GotClient
             {
-                playerData = playerData,
-                name = Name
+                playerData = playerDataExtractor,
             };
         }
 
