@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using GotLib;
@@ -13,17 +11,6 @@ namespace GotServerLibrary
     public class Server : IDisposable
     {
         #region Delegate and Events
-
-        /// <summary>
-        /// Delegate that handles changes in data recieval
-        /// </summary>
-        /// <param name="data">Data to be sent outside of server</param>
-        public delegate void DataRecievedDelegate(Packet data);
-
-        /// <summary>
-        /// Invoked when data is recieved on the server
-        /// </summary>
-        public event DataRecievedDelegate DataRecieved;
 
         /// <summary>
         /// Delegate that handles changes to clients
@@ -45,6 +32,17 @@ namespace GotServerLibrary
         /// Invoked when a client's data is updated
         /// </summary>
         public event ClientUpdateDelegate ClientUpdated;
+
+        /// <summary>
+        /// Delegate that handles invalid data from clients
+        /// </summary>
+        /// <param name="message"></param>
+        public delegate void MessageDelegate(string message);
+
+        /// <summary>
+        /// Invoked when received invalid data from a client
+        /// </summary>
+        public event MessageDelegate InvalidClientUpdateReceived;
 
         #endregion
 
@@ -153,20 +151,17 @@ namespace GotServerLibrary
                 UdpClient.Client.EndReceiveFrom(asyncResult, ref epSender);
 
                 // Analyza recieved packet and get return packet
-                var sendData = GetSendDataPacket(receivedData, epSender);
+                ProcessMessageData(receivedData, epSender);
 
                 // Get packet as byte array
-                var data = sendData.ToByteArray();
+                var data = receivedData.ToByteArray();
 
                 // Send data to other clients
-                DistributeData(clients, sendData, data);
+                DistributeData(clients, receivedData, data);
 
                 // Listen for more connections again...
                 UdpClient.Client.BeginReceiveFrom(DataStream, 0, DataStream.Length, SocketFlags.None, ref epSender,
                     ReceiveData, epSender);
-
-                // Update data through a delegate
-                OnDataRecieved(sendData);
             }
             catch (Exception ex)
             {
@@ -174,36 +169,22 @@ namespace GotServerLibrary
             }
         }
 
-        private Packet GetSendDataPacket(Packet receivedData, EndPoint epSender)
-        {
-            Packet dataPacket = new Packet
-            {
-                DataIdentifier = receivedData.DataIdentifier,
-                Name = receivedData.Name,
-                Message = null
-            };
-
-            ProcessMessageData(receivedData, epSender, dataPacket);
-
-            return dataPacket;
-        }
-
-        private void ProcessMessageData(Packet receivedData, EndPoint epSender, Packet dataPacket)
+        private void ProcessMessageData(Packet receivedData, EndPoint epSender)
         {
             Client sendingClient = ClientList.GetClient(epSender);
 
             switch (receivedData.DataIdentifier)
             {
                 case DataIdentifier.Message:
-                    HandleMessageIdentifier(receivedData, epSender, dataPacket, sendingClient);
+                    HandleMessageIdentifier(receivedData, epSender, sendingClient);
                     break;
 
                 case DataIdentifier.LogIn:
-                    HandleLogInIdentifier(receivedData, epSender, dataPacket, sendingClient);
+                    HandleLogInIdentifier(receivedData, epSender, sendingClient);
                     break;
 
                 case DataIdentifier.LogOut:
-                    HandleLogOutIdentifier(receivedData, epSender, dataPacket, sendingClient);
+                    HandleLogOutIdentifier(epSender, sendingClient);
                     break;
             }
         }
@@ -238,26 +219,23 @@ namespace GotServerLibrary
 
         #region Identifier Handling Methods
 
-        private void HandleLogOutIdentifier(Packet receivedData, EndPoint epSender, Packet dataPacket,
-                                            Client disconnectingClient)
+        private void HandleLogOutIdentifier(EndPoint epSender, Client disconnectingClient)
         {
             if (disconnectingClient == null)
             {
-                HandleAlreadyLoggedOut(epSender, dataPacket);
+                HandleAlreadyLoggedOut(epSender);
                 return;
             }
 
-            dataPacket.Message = string.Format("-- {0} has gone offline --", receivedData.Name);
             OnClientDisconneced(disconnectingClient);
             ClientList.Remove(disconnectingClient);
         }
 
-        private void HandleLogInIdentifier(Packet receivedData, EndPoint epSender, Packet dataPacket,
-                                           Client loggingInClient)
+        private void HandleLogInIdentifier(Packet receivedData, EndPoint epSender, Client loggingInClient)
         {
             if (loggingInClient != null)
             {
-                HandleAlreadyLoggedIn(epSender, dataPacket);
+                HandleAlreadyLoggedIn(epSender);
                 return;
             }
 
@@ -265,35 +243,22 @@ namespace GotServerLibrary
             {
                 endPoint = epSender,
                 id = Guid.NewGuid(),
-                data = Serializers.DeserializeObject<PlayerData>(receivedData.Message),
-                name = receivedData.Name
+                data = Serializers.DeserializeObject<PlayerData>(receivedData.Message)
             };
 
             OnClientConnected(newClient);
             ClientList.Add(newClient);
-            dataPacket.Message = string.Format("-- {0} is online --", receivedData.Name);
         }
 
-        private void HandleMessageIdentifier(Packet receivedData, EndPoint epSender, Packet dataPacket,
-                                             Client sendingClient)
+        private void HandleMessageIdentifier(Packet receivedData, EndPoint epSender, Client sendingClient)
         {
             if (sendingClient == null)
             {
-                HandleMessageRecievedFromUnknown(epSender, dataPacket);
+                HandleMessageRecievedFromUnknown(epSender);
                 return;
             }
 
-            if (sendingClient.name != receivedData.Name)
-            {
-                dataPacket.Message = string.Format("{0} : Player {1} changed his name to {2}", epSender,
-                    sendingClient.name, receivedData.Name);
-                sendingClient.name = receivedData.Name;
-            }
-
             sendingClient.data = Serializers.DeserializeObject<PlayerData>(receivedData.Message);
-
-            if (string.IsNullOrEmpty(dataPacket.Message))
-                dataPacket.Message = string.Format("{0}: {1}", receivedData.Name, sendingClient.data);
             OnClientUpdated(sendingClient);
         }
 
@@ -301,41 +266,34 @@ namespace GotServerLibrary
 
         #region Error Handling Methods
 
-        private static void HandleAlreadyLoggedOut(EndPoint epSender, Packet dataPacket)
+        private void HandleAlreadyLoggedOut(EndPoint epSender)
         {
             var errorLogoutMessage = string.Format("Recieved LOGOUT message from a player that's not in the list: {0}",
                 epSender);
-
-            SetPacketAsErrorMessage(dataPacket, errorLogoutMessage);
+            SendErrorMessage(errorLogoutMessage);
         }
 
-        private static void HandleAlreadyLoggedIn(EndPoint epSender, Packet dataPacket)
+        private void HandleAlreadyLoggedIn(EndPoint epSender)
         {
-            var errorLoginMessage = string.Format("Player already in list : {0}", epSender);
-            SetPacketAsErrorMessage(dataPacket, errorLoginMessage);
+            var errorLoginMessage = string.Format("Recieved LOGIN message from a player that's already in the list: {0}", epSender);
+            SendErrorMessage(errorLoginMessage);
         }
 
-        private static void HandleMessageRecievedFromUnknown(EndPoint epSender, Packet dataPacket)
+        private void HandleMessageRecievedFromUnknown(EndPoint epSender)
         {
             var messageRecievedErrorMessage = string.Format(
                 "Recieved message from player that's not in the list : {0}", epSender);
-            SetPacketAsErrorMessage(dataPacket, messageRecievedErrorMessage);
+            SendErrorMessage(messageRecievedErrorMessage);
         }
 
-        private static void SetPacketAsErrorMessage(Packet data, string errorMessage)
+        private void SendErrorMessage(string errorMessage)
         {
-            data.DataIdentifier = DataIdentifier.Error;
-            data.Message = errorMessage;
+            OnUnkownClientRecieved(errorMessage);
         }
 
         #endregion
 
         #region Event Invocations
-
-        protected virtual void OnDataRecieved(Packet data)
-        {
-            DataRecieved?.Invoke(data);
-        }
 
         protected virtual void OnClientConnected(Client client)
         {
@@ -350,6 +308,11 @@ namespace GotServerLibrary
         protected virtual void OnClientUpdated(Client client)
         {
             ClientUpdated?.Invoke(client);
+        }
+
+        protected virtual void OnUnkownClientRecieved(string error)
+        {
+            InvalidClientUpdateReceived?.Invoke(error);
         }
 
         #endregion

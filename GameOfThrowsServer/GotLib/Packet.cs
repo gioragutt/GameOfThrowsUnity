@@ -28,7 +28,6 @@ namespace GotLib
         #region Public Members
 
         public DataIdentifier DataIdentifier { get; set; }
-        public string Name { get; set; }
         public string Message { get; set; }
 
         #endregion
@@ -39,23 +38,20 @@ namespace GotLib
         {
             DataIdentifier = DataIdentifier.Null;
             Message = null;
-            Name = null;
         }
 
         public static Packet PacketFromBytes(byte[] dataStream)
         {
             const int DATA_IDENTIFIER_INDEX = 0;
-            const int NAME_LENGTH_INDEX = DATA_IDENTIFIER_INDEX + sizeof(int);
-            const int MESSAGE_LENGTH_INDEX = NAME_LENGTH_INDEX + sizeof(int);
+            const int MESSAGE_LENGTH_INDEX = DATA_IDENTIFIER_INDEX + sizeof(int);
+            const int MESSAGE_BEGINNING_INDEX = MESSAGE_LENGTH_INDEX + sizeof(int);
 
-            int nameLength = BitConverter.ToInt32(dataStream, NAME_LENGTH_INDEX);
             int msgLength = BitConverter.ToInt32(dataStream, MESSAGE_LENGTH_INDEX);
 
             return new Packet
             {
                 DataIdentifier = (DataIdentifier)BitConverter.ToInt32(dataStream, DATA_IDENTIFIER_INDEX),
-                Name = nameLength > 0 ? Encoding.UTF8.GetString(dataStream, 12, nameLength) : null,
-                Message = msgLength > 0 ? Encoding.UTF8.GetString(dataStream, 12 + nameLength, msgLength) : null
+                Message = msgLength > 0 ? Encoding.ASCII.GetString(dataStream, MESSAGE_BEGINNING_INDEX, msgLength) : null
             };
         }
 
@@ -71,19 +67,12 @@ namespace GotLib
             // Add the dataIdentifier
             dataStream.AddRange(BitConverter.GetBytes((int)DataIdentifier));
 
-            // Add the name length
-            dataStream.AddRange(BitConverter.GetBytes(Name?.Length ?? 0));
-
             // Add the message length
             dataStream.AddRange(BitConverter.GetBytes(Message?.Length ?? 0));
 
-            // Add the name
-            if (Name != null)
-                dataStream.AddRange(Encoding.UTF8.GetBytes(Name));
-
             // Add the message
             if (Message != null)
-                dataStream.AddRange(Encoding.UTF8.GetBytes(Message));
+                dataStream.AddRange(Encoding.ASCII.GetBytes(Message));
 
             return dataStream.ToArray();
         }
@@ -100,7 +89,6 @@ namespace GotLib
                 return true;
 
             return one.DataIdentifier == two.DataIdentifier &&
-                   one.Name == two.Name &&
                    one.Message == two.Message;
         }
 
@@ -115,7 +103,7 @@ namespace GotLib
 
         protected bool Equals(Packet other)
         {
-            return DataIdentifier == other.DataIdentifier && string.Equals(Name, other.Name) && string.Equals(Message, other.Message);
+            return DataIdentifier == other.DataIdentifier && string.Equals(Message, other.Message);
         }
 
         public override bool Equals(object obj)
@@ -132,7 +120,6 @@ namespace GotLib
             unchecked
             {
                 var hashCode = (int)DataIdentifier;
-                hashCode = (hashCode * 397) ^ (Name?.GetHashCode() ?? 0);
                 hashCode = (hashCode * 397) ^ (Message?.GetHashCode() ?? 0);
                 return hashCode;
             }

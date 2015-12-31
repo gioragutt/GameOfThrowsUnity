@@ -9,6 +9,7 @@ namespace GotLib
     [Serializable]
     public class PlayerData : ISerializable
     {
+        public string name;
         public float xPos;
         public float yPos;
 
@@ -22,6 +23,7 @@ namespace GotLib
             // Reset the property value using the GetValue method.
             xPos = (float)info.GetValue("xpos", typeof(float));
             yPos = (float)info.GetValue("ypos", typeof(float));
+            name = (string)info.GetValue("name", typeof(string));
         }
 
         public PlayerData()
@@ -33,11 +35,12 @@ namespace GotLib
         {
             info.AddValue("xpos", xPos, typeof(float));
             info.AddValue("ypos", yPos, typeof(float));
+            info.AddValue("name", name, typeof(string));
         }
 
         public override string ToString()
         {
-            return string.Format("{{{0:##.00}, {1:##.00}}}", xPos, yPos);
+            return string.Format("{0} : [ {1:0.##} , {2:0.##} ]", name, xPos, yPos);
         }
     }
 }

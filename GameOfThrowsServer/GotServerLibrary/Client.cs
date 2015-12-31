@@ -11,11 +11,10 @@ namespace GotServerLibrary
         public EndPoint endPoint;
         public Guid id;
         public PlayerData data;
-        public string name;
 
         public override string ToString()
         {
-            return string.Format("{0} : {1} : {2}", endPoint, name, data);
+            return string.Format("{0} : {1}", endPoint, data);
         }
 
         #region Generated
