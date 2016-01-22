@@ -17,7 +17,6 @@ namespace Assets.Scripts
 
         private Vector2 min, max;
         private float aspect;
-        private float maxSize;
         private BoardManager boardManager;
 
         #endregion
@@ -26,20 +25,17 @@ namespace Assets.Scripts
 
         public void Start()
         {
-            boardManager = GameObject.FindWithTag("GameManager").GetComponent<GameManager>().boardScript;
+            boardManager = GameManager.instance.boardScript;
             isFollowing = true;
             isBound = true;
             aspect = Camera.main.aspect;
 
             min = new Vector2(BoardManager.BORDER_COL, BoardManager.BORDER_COL);
             max = new Vector2(boardManager.columns, boardManager.rows);
-            maxSize = max.x <= max.y ? max.x / 2f / aspect : max.y / 2f;
-            maxSize = maxSize > 6f ? 6f : maxSize;
         }
 
         public void Update()
         {
-            UpdateCameraSize();
             UpdateCameraPosition();
         }
 
@@ -83,17 +79,6 @@ namespace Assets.Scripts
 
             if (Mathf.Abs(y - player.position.y) > margin.y)
                 y = Mathf.Lerp(y, player.position.y, smoothing.y * Time.deltaTime);
-        }
-
-        private void UpdateCameraSize()
-        {
-            float size = Input.GetAxis("Mouse ScrollWheel");
-            Camera.main.orthographicSize -= size;
-
-            if (Camera.main.orthographicSize > maxSize)
-                Camera.main.orthographicSize = maxSize;
-            if (Camera.main.orthographicSize < 1)
-                Camera.main.orthographicSize = 1;
         }
 
         #endregion

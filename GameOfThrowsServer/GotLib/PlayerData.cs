@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Runtime.Serialization;
+using System.IO;
 
 namespace GotLib
 {
@@ -7,40 +7,57 @@ namespace GotLib
     /// Represents the player data that should be transfered to the server
     /// </summary>
     [Serializable]
-    public class PlayerData : ISerializable
+    public class PlayerData
     {
         public string name;
         public float xPos;
         public float yPos;
-
-        /// <summary>
-        /// Constructor to deserialize player data from the serialized string
-        /// </summary>
-        /// <param name="info">serialized player data info</param>
-        /// <param name="context">context</param>
-        public PlayerData(SerializationInfo info, StreamingContext context)
-        {
-            // Reset the property value using the GetValue method.
-            xPos = (float)info.GetValue("xpos", typeof(float));
-            yPos = (float)info.GetValue("ypos", typeof(float));
-            name = (string)info.GetValue("name", typeof(string));
-        }
+        public float maxHealth;
+        public float currentHealth;
 
         public PlayerData()
         {
-            
+            name = string.Empty;
+            xPos = 0;
+            yPos = 0;
+            maxHealth = 0;
+            currentHealth = 0;
         }
 
-        public void GetObjectData(SerializationInfo info, StreamingContext context)
+        #region Binary Reader/Writer Methods
+
+        /* Protocol definition (order of reading and writing of data members):
+            1) name                 -   string (var)
+            2) xPos                 -   float (4 bytes)
+            3) yPos                 -   float (4 bytes)
+            4) maxHealth            -   float (4 bytes)
+            5) currentHealth        -   float (4 bytes)
+        */
+
+        public void Read(BinaryReader reader)
         {
-            info.AddValue("xpos", xPos, typeof(float));
-            info.AddValue("ypos", yPos, typeof(float));
-            info.AddValue("name", name, typeof(string));
+            name = reader.ReadString();
+            xPos = reader.ReadSingle();
+            yPos = reader.ReadSingle();
+            maxHealth = reader.ReadSingle();
+            currentHealth = reader.ReadSingle();
         }
+
+        public void Write(BinaryWriter writer)
+        {
+            writer.Write(name);
+            writer.Write(xPos);
+            writer.Write(yPos);
+            writer.Write(maxHealth);
+            writer.Write(currentHealth);
+        }
+
+        #endregion
 
         public override string ToString()
         {
-            return string.Format("{0} : [ {1:0.##} , {2:0.##} ]", name, xPos, yPos);
+            return string.Format("{0} : [ {1:0.##} , {2:0.##} ] [ {3} / {4} | {5:0.##} ] ", name, xPos, yPos,
+                (int)currentHealth, (int)maxHealth, currentHealth / maxHealth);
         }
     }
 }

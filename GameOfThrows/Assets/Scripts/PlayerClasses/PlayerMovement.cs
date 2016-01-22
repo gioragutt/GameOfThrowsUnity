@@ -1,12 +1,10 @@
-﻿
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Text;
 using UnityEngine;
 using UnityEngine.UI;
 
 // ReSharper disable UnusedMember.Local
 
-namespace Assets.Scripts
+namespace Assets.Scripts.PlayerClasses
 {
     public enum Directions
     {
@@ -22,7 +20,6 @@ namespace Assets.Scripts
     {
         #region Public Members
 
-        public static readonly List<PlayerMovement> ExistingPlayers = new List<PlayerMovement>();
         public float speed;
         public Text debugText;
         public float debugSpeedBoost = 5f;
@@ -93,7 +90,6 @@ namespace Assets.Scripts
             animator = GetComponent<Animator>();
             rb2D = GetComponent<Rigidbody2D>();
             input = Vector2.zero;
-            ExistingPlayers.Add(this);
         }
 
         private void Update()
@@ -166,7 +162,7 @@ namespace Assets.Scripts
             var details = GetDebugPrintDetails();
             if (debugText != null && IsLocal)
                 debugText.text = new StringBuilder(details.ToString()).Replace("(", "").Replace(")", "").ToString();
-            Debug.Log(details.Replace('\n', ' ').ToString());
+            //Debug.Log(details.Replace('\n', ' ').ToString());
         }
 
         #endregion

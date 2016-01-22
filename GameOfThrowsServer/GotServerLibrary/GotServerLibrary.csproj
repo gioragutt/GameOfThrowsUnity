@@ -40,9 +40,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Client.cs" />
     <Compile Include="ClientList.cs" />
-    <Compile Include="Exceptions.cs" />
+    <Compile Include="ConnectedClient.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Server.cs" />
   </ItemGroup>
@@ -50,6 +49,10 @@
     <ProjectReference Include="..\GotLib\GotLib.csproj">
       <Project>{2B452392-62E5-4BD0-AE13-39FD00C40F54}</Project>
       <Name>GotLib</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\GotLoggingService\GotLoggingService.csproj">
+      <Project>{a41cabfd-86a2-4274-a1ed-eea495338c3f}</Project>
+      <Name>GotLoggingService</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -1,7 +1,14 @@
 ﻿using System;
+using System.Diagnostics;
+using System.IO;
 using System.Net;
 using System.Net.Sockets;
+using System.Threading;
 using GotLib;
+using GotLoggingService;
+using ThreadState = System.Threading.ThreadState;
+
+// ReSharper disable ForCanBeConvertedToForeach
 
 // ReSharper disable LocalizableElement
 // ReSharper disable LoopCanBePartlyConvertedToQuery
@@ -12,314 +19,174 @@ namespace GotServerLibrary
     {
         #region Delegate and Events
 
-        /// <summary>
-        /// Delegate that handles changes to clients
-        /// </summary>
-        /// <param name="client"></param>
-        public delegate void ClientUpdateDelegate(Client client);
+        public class ServerEventArgs : EventArgs
+        {
+            public PlayerData PlayerData { get; }
+            public EndPoint EndPoint { get; }
 
-        /// <summary>
-        /// Invoked when a client is connected to the server
-        /// </summary>
-        public event ClientUpdateDelegate ClientConnected;
+            public static ServerEventArgs Create(PlayerData data, EndPoint endpoint)
+            {
+                return new ServerEventArgs(data, endpoint);
+            }
 
-        /// <summary>
-        /// Invoked when a client is disconnceted from the server
-        /// </summary>
-        public event ClientUpdateDelegate ClientDisconneced;
+            private ServerEventArgs(PlayerData data, EndPoint endpoint)
+            {
+                PlayerData = data;
+                EndPoint = endpoint;
+            }
+        }
 
-        /// <summary>
-        /// Invoked when a client's data is updated
-        /// </summary>
-        public event ClientUpdateDelegate ClientUpdated;
-
-        /// <summary>
-        /// Delegate that handles invalid data from clients
-        /// </summary>
-        /// <param name="message"></param>
-        public delegate void MessageDelegate(string message);
-
-        /// <summary>
-        /// Invoked when received invalid data from a client
-        /// </summary>
-        public event MessageDelegate InvalidClientUpdateReceived;
-
-        #endregion
-
-        #region Public Members
-
-        // Listing of clients
-        public ClientList ClientList { get; set; }
+        public delegate void ServerUpdateDelegate(ServerEventArgs e);
+        public event ServerUpdateDelegate ClientConnected;
+        public event ServerUpdateDelegate ClientDisconnected;
+        public event ServerUpdateDelegate ClientUpdated;
+        public event ServerUpdateDelegate InvalidLoginAttempt;
 
         #endregion
 
         #region Constants
 
-        private const int SERVER_PORT = 30000;
+        public const int SERVER_PORT = 30000;
 
         #endregion
 
-        #region Private Members
+        public ClientList Clients { get; }
+        public LoggerManager Logger { get; }
 
-        // Server socket
-        private UdpClient UdpClient { get; }
-
-        // Data stream
-        private byte[] DataStream { get; }
-
-        // save the endpoint to allow late listening start
-        private EndPoint clientsEndPoint;
-
-        #endregion
+        private Thread ClientAcceptingThread { get; }
+        private TcpListener Listener { get; }
 
         #region Constructor
 
-        public Server()
+        public Server(bool startOnConstructor = true)
         {
-            try
+            Logger = LoggerManager.GetLogger("GAME-OF-THROWS-SERVER");
+            Logger.Info("-----------------------------------------");
+            Logger.Info("Server Initializing");
+            Clients = new ClientList();
+            ClientAcceptingThread = new Thread(AcceptMethod);
+            Listener = new TcpListener(IPAddress.Any, SERVER_PORT);
+
+            if (startOnConstructor)
+                StartListen();
+        }
+
+        #endregion
+
+        private void AcceptMethod()
+        {
+            /*
+            
+            Run forever (for as long as the thread is alive) and await new player connections.
+            The block happens on Listener.AcceptTcpClient(), which blocks until a connection is received,
+            At which point a ConnectedClient instance is instantiated and the client is connected
+            
+            */
+            while (true)
             {
-                // Initialise the ArrayList of connected clients
-                ClientList = new ClientList();
-
-                // Initialise the socket
-                UdpClient = new UdpClient(AddressFamily.InterNetwork)
-                {
-                    Client = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp)
-                };
-
-                // Initialize the data buffer
-                DataStream = new byte[UdpClient.Client.ReceiveBufferSize];
-
-                // Initialise the IPEndPoint for the server and listen on port 30000
-                IPEndPoint server = new IPEndPoint(IPAddress.Any, SERVER_PORT);
-
-                // Associate the socket with this IP address and port
-                UdpClient.Client.Bind(server);
-
-                // Initialise the IPEndPoint for the clients
-                IPEndPoint clients = new IPEndPoint(IPAddress.Any, 0);
-
-                // Initialise the EndPoint for the clients
-                clientsEndPoint = clients;
-            }
-            catch (Exception ex)
-            {
-                throw new GotServerInitializationException(ex);
+                var accepted = new ConnectedClient(Listener.AcceptTcpClient(), this);
+                Logger.Info("Accepted client ip: " + accepted.ClientTcp.Client.RemoteEndPoint);
             }
         }
 
         public void StartListen()
         {
-            try
+            if (ClientAcceptingThread.ThreadState == ThreadState.Running)
             {
-                // Start listening for incoming data
-                UdpClient.Client.BeginReceiveFrom(DataStream, 0, DataStream.Length, SocketFlags.None,
-                    ref clientsEndPoint, ReceiveData, clientsEndPoint);
+                Logger.Debug("Attemp to start listening when already listening");
+                throw new Exception("Server already running!");
             }
-            catch (Exception ex)
-            {
-                throw new GotServerInitializationException(ex);
-            }
+
+            Listener.Start();
+            Logger.InfoFormat("Start Listening on {0}", Listener.Server.LocalEndPoint);
+            ClientAcceptingThread.Start();
         }
 
         public void StopListen()
         {
-            if (UdpClient == null || !UdpClient.Client.Connected)
-                return;
-
-            UdpClient.Close();
+            Logger.Info("Stop Listening");
+            Logger.Info("-----------------------------------------");
+            ClientAcceptingThread.Abort();
+            Clients.DisconnectAll();
         }
 
-        #endregion
+        #region Write Data
 
-        #region Send And Receive
-
-        private void ReceiveData(IAsyncResult asyncResult)
+        public void Write(ConnectedClient client)
         {
-            try
+            /*
+            +-----------------------------------------------------------------------+
+            |   This is where you write the data the client receives.               |
+            |   By the old protocol, you send the index and the amount of players   | 
+            |   As the first to pieces Of information,                              |
+            |   To be able to handle new players or removed players.                |
+            |   Then, you can send general server data - scores, map changes,       |
+            |   Etc. (stuff that are not related to each player)                    |
+            +-----------------------------------------------------------------------+
+            */
+
+            #region Memory Stream Explanation
+            // Buffer into a memory stream to cut on network time
+            // When implemente enough of server and client works too,
+            // Check if there's performance impact without buffer 
+            #endregion
+            using (var ms = new MemoryStream())
             {
-                // Initialise a packet object to store the received data
-                Packet receivedData = Packet.PacketFromBytes(DataStream);
-
-                // Initialise the IPEndPoint for the clients
-                IPEndPoint clients = new IPEndPoint(IPAddress.Any, 0);
-
-                // Initialise the EndPoint for the clients
-                EndPoint epSender = clients;
-
-                // Receive all data
-                UdpClient.Client.EndReceiveFrom(asyncResult, ref epSender);
-
-                // Analyza recieved packet and get return packet
-                ProcessMessageData(receivedData, epSender);
-
-                // Get packet as byte array
-                var data = receivedData.ToByteArray();
-
-                // Send data to other clients
-                DistributeData(clients, receivedData, data);
-
-                // Listen for more connections again...
-                UdpClient.Client.BeginReceiveFrom(DataStream, 0, DataStream.Length, SocketFlags.None, ref epSender,
-                    ReceiveData, epSender);
-            }
-            catch (Exception ex)
-            {
-                throw new GotServerRecieveDataException(ex);
-            }
-        }
-
-        private void ProcessMessageData(Packet receivedData, EndPoint epSender)
-        {
-            Client sendingClient = ClientList.GetClient(epSender);
-
-            switch (receivedData.DataIdentifier)
-            {
-                case DataIdentifier.Message:
-                    HandleMessageIdentifier(receivedData, epSender, sendingClient);
-                    break;
-
-                case DataIdentifier.LogIn:
-                    HandleLogInIdentifier(receivedData, epSender, sendingClient);
-                    break;
-
-                case DataIdentifier.LogOut:
-                    HandleLogOutIdentifier(epSender, sendingClient);
-                    break;
-            }
-        }
-
-        private void DistributeData(EndPoint epSender, Packet sendData, byte[] data)
-        {
-            if (sendData.DataIdentifier == DataIdentifier.LogIn || sendData.DataIdentifier == DataIdentifier.Error) return;
-
-            foreach (Client client in ClientList)
-            {
-                if (client.endPoint.ToString() != epSender.ToString())
+                using (var writer = new BinaryWriter(ms))
                 {
-                    // Broadcast to all logged on users except for sending client
-                    UdpClient.Client.BeginSendTo(data, 0, data.Length, SocketFlags.None, client.endPoint, SendData, client.endPoint);
+                    // Write index of player in list
+                    writer.Write(Clients.IndexOf(client));
+
+                    // Write amount of players connected
+                    writer.Write(Clients.Count);
+
+                    // Send player data in the same order as they are in the list
+                    // Note: do not convert to foreach, CollectionChangedExceptions and such will be raised
+                    // At most inappropriate times!
+                    for (int i = 0; i < Clients.Count; ++i)
+                    {
+                        Clients[i].Write(writer);
+                    }
+
+                    // Write data to the player
+                    client.ClientUdp.Client.Send(ms.ToArray());
                 }
             }
-        }
-
-        private void SendData(IAsyncResult asyncResult)
-        {
-            try
-            {
-                UdpClient.EndSend(asyncResult);
-            }
-            catch (Exception ex)
-            {
-                throw new GotServerSendDataException(ex);
-            }
-        }
-
-        #endregion
-
-        #region Identifier Handling Methods
-
-        private void HandleLogOutIdentifier(EndPoint epSender, Client disconnectingClient)
-        {
-            if (disconnectingClient == null)
-            {
-                HandleAlreadyLoggedOut(epSender);
-                return;
-            }
-
-            OnClientDisconneced(disconnectingClient);
-            ClientList.Remove(disconnectingClient);
-        }
-
-        private void HandleLogInIdentifier(Packet receivedData, EndPoint epSender, Client loggingInClient)
-        {
-            if (loggingInClient != null)
-            {
-                HandleAlreadyLoggedIn(epSender);
-                return;
-            }
-
-            Client newClient = new Client
-            {
-                endPoint = epSender,
-                id = Guid.NewGuid(),
-                data = Serializers.DeserializeObject<PlayerData>(receivedData.Message)
-            };
-
-            OnClientConnected(newClient);
-            ClientList.Add(newClient);
-        }
-
-        private void HandleMessageIdentifier(Packet receivedData, EndPoint epSender, Client sendingClient)
-        {
-            if (sendingClient == null)
-            {
-                HandleMessageRecievedFromUnknown(epSender);
-                return;
-            }
-
-            sendingClient.data = Serializers.DeserializeObject<PlayerData>(receivedData.Message);
-            OnClientUpdated(sendingClient);
-        }
-
-        #endregion
-
-        #region Error Handling Methods
-
-        private void HandleAlreadyLoggedOut(EndPoint epSender)
-        {
-            var errorLogoutMessage = string.Format("Recieved LOGOUT message from a player that's not in the list: {0}",
-                epSender);
-            SendErrorMessage(errorLogoutMessage);
-        }
-
-        private void HandleAlreadyLoggedIn(EndPoint epSender)
-        {
-            var errorLoginMessage = string.Format("Recieved LOGIN message from a player that's already in the list: {0}", epSender);
-            SendErrorMessage(errorLoginMessage);
-        }
-
-        private void HandleMessageRecievedFromUnknown(EndPoint epSender)
-        {
-            var messageRecievedErrorMessage = string.Format(
-                "Recieved message from player that's not in the list : {0}", epSender);
-            SendErrorMessage(messageRecievedErrorMessage);
-        }
-
-        private void SendErrorMessage(string errorMessage)
-        {
-            OnUnkownClientRecieved(errorMessage);
         }
 
         #endregion
 
         #region Event Invocations
 
-        protected virtual void OnClientConnected(Client client)
+        internal virtual void OnClientConnected(ServerEventArgs e)
         {
-            ClientConnected?.Invoke(client);
+            ClientConnected?.Invoke(e);
         }
 
-        protected virtual void OnClientDisconneced(Client client)
+        internal virtual void OnInvalidLoginAttempt(ServerEventArgs e)
         {
-            ClientDisconneced?.Invoke(client);
+            InvalidLoginAttempt?.Invoke(e);
         }
 
-        protected virtual void OnClientUpdated(Client client)
+        internal virtual void OnClientUpdated(ServerEventArgs e)
         {
-            ClientUpdated?.Invoke(client);
+            ClientUpdated?.Invoke(e);
         }
 
-        protected virtual void OnUnkownClientRecieved(string error)
+        internal virtual void OnClientDisconnected(ServerEventArgs e)
         {
-            InvalidClientUpdateReceived?.Invoke(error);
+            ClientDisconnected?.Invoke(e);
         }
 
         #endregion
+
+        #region IDisposable Methods
 
         public void Dispose()
         {
             StopListen();
         }
+
+        #endregion
     }
 }

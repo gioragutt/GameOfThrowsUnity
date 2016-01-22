@@ -1,6 +1,6 @@
 ﻿using GotLib;
 
-namespace Assets.Scripts
+namespace Assets.Scripts.PlayerClasses
 {
     public interface IPlayerDataGetter
     {

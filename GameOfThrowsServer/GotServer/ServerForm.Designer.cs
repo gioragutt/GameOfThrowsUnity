@@ -65,7 +65,7 @@
             // groupBox1
             // 
             this.groupBox1.Controls.Add(this.clientsListBox);
-            this.groupBox1.Location = new System.Drawing.Point(12, 290);
+            this.groupBox1.Location = new System.Drawing.Point(12, 313);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.Size = new System.Drawing.Size(385, 171);
             this.groupBox1.TabIndex = 5;
@@ -86,7 +86,7 @@
             // groupBox2
             // 
             this.groupBox2.Controls.Add(this.messagesTextbox);
-            this.groupBox2.Location = new System.Drawing.Point(12, 93);
+            this.groupBox2.Location = new System.Drawing.Point(12, 116);
             this.groupBox2.Name = "groupBox2";
             this.groupBox2.Size = new System.Drawing.Size(385, 191);
             this.groupBox2.TabIndex = 7;
@@ -110,10 +110,11 @@
             this.txtStatusMessage.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(177)));
             this.txtStatusMessage.ForeColor = System.Drawing.SystemColors.WindowText;
             this.txtStatusMessage.Location = new System.Drawing.Point(6, 19);
+            this.txtStatusMessage.Multiline = true;
             this.txtStatusMessage.Name = "txtStatusMessage";
             this.txtStatusMessage.ReadOnly = true;
             this.txtStatusMessage.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.txtStatusMessage.Size = new System.Drawing.Size(369, 20);
+            this.txtStatusMessage.Size = new System.Drawing.Size(369, 44);
             this.txtStatusMessage.TabIndex = 9;
             // 
             // statusReseterTimer
@@ -125,7 +126,8 @@
             this.groupBox3.Controls.Add(this.txtStatusMessage);
             this.groupBox3.Location = new System.Drawing.Point(12, 41);
             this.groupBox3.Name = "groupBox3";
-            this.groupBox3.Size = new System.Drawing.Size(385, 46);
+            this.groupBox3.RightToLeft = System.Windows.Forms.RightToLeft.No;
+            this.groupBox3.Size = new System.Drawing.Size(385, 69);
             this.groupBox3.TabIndex = 10;
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "Status Message";
@@ -141,7 +143,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(409, 468);
+            this.ClientSize = new System.Drawing.Size(409, 496);
             this.Controls.Add(this.txtStatus);
             this.Controls.Add(this.groupBox3);
             this.Controls.Add(this.btnExit);
@@ -151,8 +153,8 @@
             this.ForeColor = System.Drawing.SystemColors.WindowText;
             this.MaximizeBox = false;
             this.Name = "ServerForm";
-            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Server";
+            this.TopMost = true;
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.ServerForm_FormClosing);
             this.Load += new System.EventHandler(this.Server_Load);
             this.groupBox1.ResumeLayout(false);

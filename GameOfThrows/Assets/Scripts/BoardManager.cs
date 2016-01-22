@@ -120,8 +120,10 @@ namespace Assets.Scripts
             return position;
         }
 
-        private void LayoutObjectsAtRandom([NotNull]IList<GameObject> objects, int amount, [NotNull]Transform parent, bool solid)
+        private void LayoutObjectsAtRandom(IList<GameObject> objects, int amount, Transform parent, bool solid)
         {
+            if (objects == null) throw new ArgumentNullException("objects");
+            if (parent == null) throw new ArgumentNullException("parent");
             if (amount < 0) throw new ArgumentException("Amount must be higher or equal to 0");
 
             for (int i = 0; i < amount; ++i)
@@ -204,6 +206,9 @@ namespace Assets.Scripts
         /// <param name="extraWalls">for dev purposes, amount extra walls to be spread around the map</param>
         public void SetUpScene(int extraWalls)
         {
+            if(boardHolder != null)
+                Destroy(boardHolder);
+
             InitializeFloorPositionsList();
             SetUpWalls();
             LayoutObjectsAtRandom(wallTiles, extraWalls, wallsHolder, true);

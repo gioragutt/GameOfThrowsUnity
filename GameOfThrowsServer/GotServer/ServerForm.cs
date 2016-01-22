@@ -38,7 +38,7 @@ namespace GotServer
             statusReseterStopwatch = new Stopwatch();
             InitializeComponent();
             previousPlayersMessages = new Dictionary<string, string>();
-            server = new Server();
+            server = new Server(false);
         }
 
         #endregion
@@ -53,14 +53,17 @@ namespace GotServer
 
                 // Initialize the delegate which updates the data
                 server.ClientConnected += Server_OnClientConnected;
-                server.ClientDisconneced += Server_OnClientDisconneced;
+                server.ClientDisconnected += Server_OnClientDisconneced;
                 server.ClientUpdated += Server_OnClientUpdated;
-                server.InvalidClientUpdateReceived += UpdateState;
-
+                server.InvalidLoginAttempt +=Server_OnInvalidLoginAttempt;
                 server.StartListen();
+                clientsListBox.DataSource = server.Clients;
+                clientsListBox.DataBindings.Add("", server.Clients, "");
 
                 txtStatus.Text = LISTENING;
                 statusReseterTimer.Start();
+
+                ShowStatus(Color.CornflowerBlue, "Server initiated!");
             }
             catch (Exception ex)
             {
@@ -70,48 +73,65 @@ namespace GotServer
             }
         }
 
-        private void Server_OnClientUpdated(Client client)
+        private void Server_OnInvalidLoginAttempt(Server.ServerEventArgs e)
         {
             if (InvokeRequired)
             {
-                Server.ClientUpdateDelegate clientUpdateOperation = Server_OnClientUpdated;
-                Invoke(clientUpdateOperation, client);
+                Server.ServerUpdateDelegate serverUpdateOperation = Server_OnInvalidLoginAttempt;
+                Invoke(serverUpdateOperation, e);
             }
             else
             {
-                HandlePlayerUpdate(client);
+                UpdateStatus("Client {0} trying to log in when already logged in", e.EndPoint.ToString());
             }
         }
 
-        private void Server_OnClientDisconneced(Client client)
+        private void Server_OnClientUpdated(Server.ServerEventArgs e)
         {
             if (InvokeRequired)
             {
-                Server.ClientUpdateDelegate clientUpdateOperation = Server_OnClientDisconneced;
-                Invoke(clientUpdateOperation, client);
+                Server.ServerUpdateDelegate serverUpdateOperation = Server_OnClientUpdated;
+                Invoke(serverUpdateOperation, e);
             }
             else
             {
-                HandlePlayerDisconnection(client);
+                UpdateStatus(e.PlayerData.ToString());
+                clientsListBox.DataSource = server.Clients;
             }
         }
 
-        private void Server_OnClientConnected(Client client)
+        private void Server_OnClientDisconneced(Server.ServerEventArgs e)
         {
             if (InvokeRequired)
             {
-                Server.ClientUpdateDelegate clientUpdateOperation = Server_OnClientConnected;
-                Invoke(clientUpdateOperation, client);
+                Server.ServerUpdateDelegate serverUpdateOperation = Server_OnClientDisconneced;
+                Invoke(serverUpdateOperation, e);
             }
             else
             {
-                HandlePlayerConnection(client);
+                ShowStatus(Color.DarkGreen, "Client {0} : {1} Disconnected!", e.EndPoint, e.PlayerData);
+                clientsListBox.DataSource = server.Clients;
+            }
+        }
+
+        private void Server_OnClientConnected(Server.ServerEventArgs e)
+        {
+            if (InvokeRequired)
+            {
+                Server.ServerUpdateDelegate serverUpdateOperation = Server_OnClientConnected;
+                Invoke(serverUpdateOperation, e);
+            }
+            else
+            {
+                ShowStatus(Color.LawnGreen, "Client {0} : {1} Connected!", e.EndPoint, e.PlayerData);
+                clientsListBox.DataSource = server.Clients;
             }
         }
 
         private void ServerForm_FormClosing(object sender, FormClosingEventArgs e)
         {
             server.Dispose();
+            Process.GetCurrentProcess().Kill();
         }
 
         private void btnExit_Click(object sender, EventArgs e)
@@ -138,48 +158,12 @@ namespace GotServer
 
         #region Other Methods
 
-        private void HandlePlayerConnection(Client client)
+        private void UpdateStatus(string format, params object[] data)
         {
-            var connectionMessage = string.Format("[ {0} : {1} ] Connected!", client.endPoint, client.PlayerDataToString());
-            UpdateState(connectionMessage);
-            clientsListBox.Items.Add(client);
-            previousPlayersMessages.Add(client.endPoint.ToString(), string.Empty);
-
-            txtStatusMessage.Text = connectionMessage;
-            txtStatusMessage.ForeColor = Color.LimeGreen;
-            statusReseterStopwatch.Restart();
+            UpdateStatus(string.Format(format, data));
         }
 
-        private void HandlePlayerDisconnection(Client client)
-        {
-            var disconnectionMessage = string.Format("[ {0} : {1} ] Disconnected!", client.endPoint, client.PlayerDataToString());
-            UpdateState(disconnectionMessage);
-            clientsListBox.Items.Remove(client);
-            previousPlayersMessages.Remove(client.endPoint.ToString());
-
-            txtStatusMessage.Text = disconnectionMessage;
-            txtStatusMessage.ForeColor = Color.DarkGreen;
-            statusReseterStopwatch.Restart();
-        }
-
-        private void HandlePlayerUpdate(Client client)
-        {
-            var indexInList = clientsListBox.Items.IndexOf(client);
-
-            if (indexInList == -1)
-                ShowError("Client {0} updated while not in list", client.endPoint);
-            else
-            {
-                clientsListBox.Items[indexInList] = client;
-                var playerData = client.PlayerDataToString();
-                if (previousPlayersMessages[client.endPoint.ToString()] == playerData) return;
-
-                UpdateState(playerData);
-                previousPlayersMessages[client.endPoint.ToString()] = playerData;
-            }
-        }
-        
-        private void UpdateState(string message)
+        private void UpdateStatus(string message)
         {
             if (!message.EndsWith("\n"))
                 message += "\n";
@@ -198,6 +182,20 @@ namespace GotServer
             txtStatusMessage.Text = message;
             txtStatusMessage.ForeColor = Color.Red;
             statusReseterStopwatch.Restart();
+            UpdateStatus(message);
+        }
+
+        private void ShowStatus(Color statusColor, string format, params object[] data)
+        {
+            ShowStatus(statusColor, string.Format(format, data));
+        }
+
+        private void ShowStatus(Color statusColor, string message)
+        {
+            txtStatusMessage.ForeColor = statusColor;
+            txtStatusMessage.Text = message;
+            statusReseterStopwatch.Restart();
+            UpdateStatus(message);
         }
 
         #endregion

@@ -1,6 +1,6 @@
 ﻿using System.Collections;
 using System.Linq;
-using JetBrains.Annotations;
+using Assets.Scripts.PlayerClasses;
 using UnityEngine;
 
 namespace Assets.Scripts

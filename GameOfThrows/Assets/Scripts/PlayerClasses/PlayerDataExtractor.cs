@@ -1,7 +1,7 @@
 ﻿using GotLib;
 using UnityEngine;
 
-namespace Assets.Scripts
+namespace Assets.Scripts.PlayerClasses
 {
     [RequireComponent(typeof(PlayerMovement), typeof(PlayerInformation))]
     public class PlayerDataExtractor : MonoBehaviour, IPlayerDataGetter
@@ -27,7 +27,7 @@ namespace Assets.Scripts
 
             return new PlayerData
             {
-                name = informationComponent.playerName,
+                name = informationComponent.stats.playerName,
                 xPos = position.x,
                 yPos = position.y
             };

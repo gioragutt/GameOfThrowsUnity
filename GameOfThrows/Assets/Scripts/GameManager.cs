@@ -1,4 +1,8 @@
-﻿using UnityEngine;
+﻿using System;
+using System.Linq;
+using System.Net;
+using System.Net.Sockets;
+using UnityEngine;
 
 namespace Assets.Scripts
 {
@@ -8,14 +12,14 @@ namespace Assets.Scripts
         public static GameManager instance;
         public int extraWalls = 5;
 
-        void InitGame()
+        private void InitGame()
         {
             boardScript.SetUpScene(extraWalls);
         }
 
         #region Game Loop Functions
 
-        void Start()
+        private void Start()
         {
             if (instance == null)
                 instance = this;
@@ -26,7 +30,16 @@ namespace Assets.Scripts
             boardScript = GetComponent<BoardManager>();
             InitGame();
         }
-        
+
+        #endregion
+
+        #region Other Methods
+
+        public static string GetLocalIpAddress()
+        {
+            return Dns.GetHostEntry("localhost").AddressList[0].ToString();
+        }
+
         #endregion
     }
 }
