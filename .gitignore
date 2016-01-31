@@ -5,3 +5,6 @@ GameOfThrows/Library/UnityAssemblies/UnityEngine.xml
 [Bb]in/
 [Oo]bj/
 GameOfThrowsServer/GotServer/obj 
+GameOfThrowsServer/GotServerLibrary/obj/
+GameOfThrows/obj
+GameOfThrowsServer/GotLib/obj

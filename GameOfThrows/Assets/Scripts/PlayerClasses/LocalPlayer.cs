@@ -9,14 +9,8 @@ namespace Assets.Scripts.PlayerClasses
 
         public override void Read(BinaryReader reader)
         {
-            // Ignore name update from server
-            reader.ReadString();
-
-            // Ignore x pos update from server
-            reader.ReadInt32();
-
-            // Ignore y pos update from server
-            reader.ReadInt32();
+            // Ignore all player data
+            new PlayerData().Read(reader);
         }
 
         #region Game Loop Methods

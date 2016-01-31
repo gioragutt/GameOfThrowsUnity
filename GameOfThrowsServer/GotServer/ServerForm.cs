@@ -55,7 +55,7 @@ namespace GotServer
                 server.ClientConnected += Server_OnClientConnected;
                 server.ClientDisconnected += Server_OnClientDisconneced;
                 server.ClientUpdated += Server_OnClientUpdated;
-                server.InvalidLoginAttempt +=Server_OnInvalidLoginAttempt;
+                server.InvalidLoginAttempt += Server_OnInvalidLoginAttempt;
                 server.StartListen();
                 clientsListBox.DataSource = server.Clients;
                 clientsListBox.DataBindings.Add("", server.Clients, "");

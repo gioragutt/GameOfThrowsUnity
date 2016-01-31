@@ -24,12 +24,15 @@ namespace Assets.Scripts.PlayerClasses
         private PlayerData ExtractPlayerData()
         {
             var position = movementComponent.Position;
+            var stats = informationComponent.stats;
 
             return new PlayerData
             {
                 name = informationComponent.stats.playerName,
                 xPos = position.x,
-                yPos = position.y
+                yPos = position.y,
+                maxHealth = stats.maxHealth,
+                currentHealth = stats.CurrentHealth
             };
         }
 

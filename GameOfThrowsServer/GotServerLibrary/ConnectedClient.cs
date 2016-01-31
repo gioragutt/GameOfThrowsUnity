@@ -43,9 +43,10 @@ namespace GotServerLibrary
     {
         #region Constants
 
-        // Amount of times a player has to not responded to be disconnected by the server
-        public const int TIMEOUT_TICKS = 500;
-    
+        private const double SECONDS_BEFORE_DISCONNECTION = 5;
+        private const int MINUMUM_PING_THRASHOLD = 20;
+        private const int TIMEOUT_TICKS = (int)((double)SECONDS_BEFORE_DISCONNECTION * 1000 / MINUMUM_PING_THRASHOLD);
+
         #endregion
 
         #region Public
@@ -131,6 +132,9 @@ namespace GotServerLibrary
 
                     MemoryStream recievedData = new MemoryStream(ClientUdp.Receive(ref client));
 
+                    if (client.ToString() == ClientUdp.Client.LocalEndPoint.ToString())
+                        return;
+
                     // Mark client as responded
                     ClientResponded();
 
@@ -147,8 +151,7 @@ namespace GotServerLibrary
                 }
                 else
                 {
-                    if (!_debug)
-                        ClientDidntRespond();
+                    ClientDidntRespond();
                     Debug.WriteLine(Timeout.Elasped);
                 }
 

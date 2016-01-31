@@ -1,8 +1,5 @@
 ﻿using System.Text;
 using log4net;
-using log4net.Appender;
-using log4net.Config;
-using log4net.Layout;
 
 namespace GotLoggingService
 {
@@ -99,7 +96,7 @@ namespace GotLoggingService
 
         #endregion
     }
-
+    
     // Manage stuff here
     public sealed partial class LoggerManager
     {

@@ -38,23 +38,36 @@
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="UnityEngine">
-      <HintPath>C:/Program Files (x86)/Unity/Editor/Data/Managed/UnityEngine.dll</HintPath>
+      <HintPath>D:/Program Files (x86)/Unity/Editor/Data/Managed/UnityEngine.dll</HintPath>
     </Reference>
     <Reference Include="UnityEditor">
-      <HintPath>C:/Program Files (x86)/Unity/Editor/Data/Managed/UnityEditor.dll</HintPath>
+      <HintPath>D:/Program Files (x86)/Unity/Editor/Data/Managed/UnityEditor.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
      <Compile Include="Assets\Scripts\BoardManager.cs" />
      <Compile Include="Assets\Scripts\CameraController.cs" />
+     <Compile Include="Assets\Scripts\Connection.cs" />
+     <Compile Include="Assets\Scripts\GOTExtentions.cs" />
      <Compile Include="Assets\Scripts\GameManager.cs" />
-     <Compile Include="Assets\Scripts\Loader.cs" />
-     <Compile Include="Assets\Scripts\PlayerMovement.cs" />
+     <Compile Include="Assets\Scripts\PlayerClasses\IPlayerDataGetter.cs" />
+     <Compile Include="Assets\Scripts\PlayerClasses\LocalPlayer.cs" />
+     <Compile Include="Assets\Scripts\PlayerClasses\LocalPlayerMovement.cs" />
+     <Compile Include="Assets\Scripts\PlayerClasses\NetworkPlayer.cs" />
+     <Compile Include="Assets\Scripts\PlayerClasses\NetworkPlayerMovement.cs" />
+     <Compile Include="Assets\Scripts\PlayerClasses\Player.cs" />
+     <Compile Include="Assets\Scripts\PlayerClasses\PlayerDataExtractor.cs" />
+     <Compile Include="Assets\Scripts\PlayerClasses\PlayerInformation.cs" />
+     <Compile Include="Assets\Scripts\PlayerClasses\PlayerMovement.cs" />
+     <Compile Include="Assets\Scripts\PlayerClasses\PlayerStatus.cs" />
  <Reference Include="UnityEngine.UI">
- <HintPath>C:/Program Files (x86)/Unity/Editor/Data/UnityExtensions/Unity/GUISystem/UnityEngine.UI.dll</HintPath>
+ <HintPath>D:/Program Files (x86)/Unity/Editor/Data/UnityExtensions/Unity/GUISystem/UnityEngine.UI.dll</HintPath>
  </Reference>
  <Reference Include="UnityEngine.Networking">
- <HintPath>C:/Program Files (x86)/Unity/Editor/Data/UnityExtensions/Unity/Networking/UnityEngine.Networking.dll</HintPath>
+ <HintPath>D:/Program Files (x86)/Unity/Editor/Data/UnityExtensions/Unity/Networking/UnityEngine.Networking.dll</HintPath>
+ </Reference>
+ <Reference Include="GotLib">
+ <HintPath>D:/Repositories/GameOfThrowsUnity/GameOfThrows/Assets/Plugins/GotLib.dll</HintPath>
  </Reference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

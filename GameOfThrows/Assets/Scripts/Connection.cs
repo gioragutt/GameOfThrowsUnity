@@ -148,7 +148,7 @@ namespace Assets.Scripts
         private void ConnectToServerUdp(IPEndPoint serverUdpEndpoint)
         {
             Debug.LogError("Connecting UDP to: " + serverUdpEndpoint);
-            ServerUdp = new UdpClient();
+            ServerUdp = new UdpClient(27015);
             ServerUdp.Connect(serverUdpEndpoint);
             if (ServerUdp.Client.Connected)
             {
@@ -171,7 +171,6 @@ namespace Assets.Scripts
             }
             catch (SocketException)
             {
-                Debug.LogError("Server is not online!");
                 success = false;
             }
 
@@ -230,12 +229,10 @@ namespace Assets.Scripts
                             LocalPlayerID = reader.ReadInt32();
 
                             // Update amount of players
-                            SetAmountOfPlayers(reader.Read());
+                            SetAmountOfPlayers(reader.ReadInt32());
 
                             // Update players data
                             UpdatePlayers(reader);
-
-                            Debug.LogError("New player data: " + Players[LocalPlayerID].Data);
                         }
                     }
 
@@ -263,6 +260,12 @@ namespace Assets.Scripts
         #endregion
 
         #region Other Methods
+
+        void OnApplicationQuit()
+        {
+            Disconnect();
+            Debug.Log("Application ending after " + Time.time + " seconds");
+        }
 
         private void Disconnect()
         {

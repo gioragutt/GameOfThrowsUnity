@@ -16,8 +16,14 @@ namespace Assets.Scripts.PlayerClasses
             private float currentHealth;
             public float CurrentHealth
             {
-                get { return currentHealth; }
-                set { currentHealth = Mathf.Clamp(value, 0f, maxHealth); }
+                get
+                {
+                    return currentHealth;
+                }
+                set
+                {
+                    currentHealth = Mathf.Clamp(value, 0f, maxHealth);
+                }
             }
 
             public void Init()
